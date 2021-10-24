@@ -1,1 +1,1 @@
-# Spring Based 2D Physics Engine prototype
+# Spring Based 2D Physics Engine test
