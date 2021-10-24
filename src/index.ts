@@ -14,12 +14,13 @@ class World {
     document.body.appendChild(this.canvas);
     this.ctx = this.canvas.getContext('2d');
     window.requestAnimationFrame(this.animationCallback.bind(this));
-    this.gravity = new Vector(0, 10);
+    this.gravity = new Vector(0, 0.16);
     this.base = window.innerHeight - 100;
-    this.structures.push(new SoftCircle(this, new Vector(300, this.base - 100), 100, 16));
+    this.structures.push(new SoftCircle(this, new Vector(this.canvas.width / 2 - 150, this.base - 200), 100, 5));
+    this.structures.push(new SoftCircle(this, new Vector(this.canvas.width / 2 + 150, this.base - 200), 100, 16));
   }
   animationCallback(time: number) {
-    const deltaTime = (time - this.lastTime) / 1000;
+    const deltaTime = 0.016;//(time - this.lastTime) / 1000;
     this.lastTime = time;
 
     this.ctx.fillStyle = "#ffff";
@@ -32,6 +33,9 @@ class World {
     this.ctx.lineTo(this.canvas.width, this.canvas.height - 100);
     this.ctx.stroke();
 
+    this.structures[0].addTorque(-0.001);
+    this.structures[1].addTorque(0.001);
+
     this.structures.forEach(s => s.update(deltaTime));
     this.structures.forEach(s => s.draw(this.ctx));
 
@@ -42,7 +46,8 @@ class World {
 class Point {
   velocity: Vector;
   acceleration: Vector;
-  constructor(public position: Vector/*, private world: World*/) {
+  constructor(public position: Vector/*, private world: World*/, public mass: number = 1) {
+    this.acceleration = new Vector();
     this.velocity = new Vector();
   }
   draw(ctx: CanvasRenderingContext2D) {
@@ -53,10 +58,10 @@ class Point {
     ctx.fill();
   }
   addForce(force: Vector) {
-    this.acceleration = this.acceleration || new Vector();
-    this.acceleration.add(force);
+    this.acceleration.add(force.copy().scale(1 / this.mass));
   }
   update(delta: number, base?: number) {
+    //console.log(this.acceleration);
     this.velocity.add(this.acceleration.scale(delta));
 
     this.velocity.scale(0.999);
@@ -66,17 +71,20 @@ class Point {
     if (base && this.position.y > base) {
       this.position.y = base;
       this.velocity.y = 0;
-      this.velocity.scale(0.5);
+      this.velocity.scale(0.8);
     }
     this.acceleration = new Vector();
   }
   distance(p: Point) {
     return this.position.distance(p.position);
   }
+  rotateAround(angle: number, around: Vector) {
+    this.position.rotateAround(angle, around);
+  }
 }
 
 class Spring {
-  constructor(public pointA: Point, public pointB: Point, public constant = 300, public distance?: number) {
+  constructor(public pointA: Point, public pointB: Point, public constant = 3, public distance?: number) {
     if (!distance) {
       this.distance = pointA.distance(pointB);
     }
@@ -85,7 +93,7 @@ class Spring {
     const d = this.distance - this.pointA.distance(this.pointB);
     const forceVal = d * this.constant;
     const direction = this.pointA.position.copy().sub(this.pointB.position).normalize();
-    direction.scale(forceVal * delta);
+    direction.scale(forceVal);
     this.pointA.addForce(direction);
     this.pointB.addForce(direction.scale(-1));
   }
@@ -100,6 +108,7 @@ class Spring {
 }
 
 class Vector {
+  static ZERO = new Vector();
   constructor(public x = 0, public y = 0) { }
   add(v: Vector) {
     this.x += v.x;
@@ -126,13 +135,27 @@ class Vector {
     return this;
   }
   get length() {
-    return this.distance(new Vector());
+    return this.distance(Vector.ZERO);
   }
   normalize() {
     return this.scale(1 / this.length);
   }
   toString() {
     return `{ x : ${this.x} , y : ${this.y}}`;
+  }
+  rotate(angle: number) {
+    let x = this.x;
+    let y = this.y;
+    this.x = (x * Math.cos(angle)) - (y * Math.sin(angle));
+    this.y = (x * Math.sin(angle)) + (y * Math.cos(angle));
+    return this;
+  }
+  rotateAround(angle: number, around: Vector) {
+    let x = this.x - around.x;
+    let y = this.y - around.y;
+    this.x = around.x + (x * Math.cos(angle)) - (y * Math.sin(angle));
+    this.y = around.y + (x * Math.sin(angle)) + (y * Math.cos(angle));
+    return this;
   }
 }
 
@@ -141,13 +164,36 @@ class SoftStructure {
   points: Point[] = [];
   constructor(private world: World) { }
   update(delta: number) {
-    this.points.forEach(p => p.addForce(this.world.gravity.copy().scale(delta)));
+    this.points.forEach(p => p.addForce(this.world.gravity.copy()));
     this.springs.forEach(s => s.update(delta));
     this.points.forEach(p => p.update(delta, this.world.base));
   }
   draw(ctx: CanvasRenderingContext2D) {
     this.springs.forEach(s => s.draw(ctx));
     this.points.forEach(p => p.draw(ctx));
+  }
+  rotate(angle: number) {
+    let center = this.center;
+    this.points.forEach(p => p.rotateAround(angle, center))
+    return this;
+  }
+  /*addForce(force: Vector) {
+    this.points.forEach(p => p.addForce(force))
+  }*/
+  addTorque(torque: number) {
+    let center = this.center;
+    this.points.forEach(p => {
+      const offset = p.position.copy().sub(center);
+      if (offset.length > 0) {
+        const direction = offset.copy().normalize().rotate(Math.PI / 2);
+        p.addForce(direction.scale(offset.length * torque))
+      }
+    });
+  }
+  get center() {
+    let center = new Vector();
+    this.points.forEach(p => center.add(p.position));
+    return center.scale(1 / this.points.length);
   }
 }
 
@@ -175,7 +221,9 @@ class SoftCircle extends SoftStructure {
     }
   }
   update(delta: number) {
-    this.centerPoint.addForce(new Vector(1, 0))
+    //this.centerPoint.addForce(new Vector(1, 0))
+    //this.addTorque(0.001);
+    //console.log(this.center);
     super.update(delta);
   }
 }
