@@ -7,3 +7,14 @@
 body {
     margin: 0;
 }
+
+#uiText {
+    position: fixed;
+    left: 20px;
+    top: 20px;
+    span {
+        display: flex;
+        align-items: center;
+        font: bold 18px sans-serif;
+    }
+}

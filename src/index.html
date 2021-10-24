@@ -1,18 +1,24 @@
 <html lang="en">
 
 <head>
-    <meta charset="UTF-8">
-    <meta http-equiv="X-UA-Compatible"
-          content="IE=edge">
-    <meta name="viewport"
-          content="width=device-width, initial-scale=1.0">
-    <link rel="stylesheet"
-          href="<%= htmlWebpackPlugin.files.chunks.main.css %>">
-    <title>Document</title>
+      <meta charset="UTF-8">
+      <meta http-equiv="X-UA-Compatible"
+            content="IE=edge">
+      <meta name="viewport"
+            content="width=device-width, initial-scale=1.0">
+      <link rel="stylesheet"
+            href="<%= htmlWebpackPlugin.files.chunks.main.css %>">
+      <title>Document</title>
 </head>
 
 <body>
-    <script src="<%= htmlWebpackPlugin.files.chunks.main.entry %>"></script>
+      <div id="uiText">
+            <span>Spring Based 2D Physics Engine</span>
+            <span>- Drag with mouse</span>
+            <br>
+            <span><a href="https://github.com/Gfc9110/spring-physics-2d" target="_blank">GitHub Repository</a></span>
+      </div>
+      <script src="<%= htmlWebpackPlugin.files.chunks.main.entry %>"></script>
 </body>
 
 </html>

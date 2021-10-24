@@ -53,10 +53,6 @@ export class World {
     this.ctx.fillStyle = "#ffff";
     this.ctx.strokeStyle = "#fff0";
     this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
-    
-    this.ctx.fillStyle = "#000";
-    this.ctx.font = "bold 16px sans-serif"
-    this.ctx.fillText("Drag with mouse", 20, 30);
 
     this.ctx.strokeStyle = "#000";
     this.ctx.beginPath();
