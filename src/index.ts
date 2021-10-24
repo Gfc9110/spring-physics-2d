@@ -1,5 +1,7 @@
 import './styles/style.scss';
 
+const mousePickDistancesq = 400;
+
 class World {
   canvas: HTMLCanvasElement;
   ctx: CanvasRenderingContext2D;
@@ -7,6 +9,8 @@ class World {
   gravity: Vector;
   base: number;
   structures: SoftStructure[] = [];
+  draggingPoint: Point;
+  mousePosition: Vector;
   constructor() {
     this.canvas = document.createElement("canvas");
     this.canvas.width = window.innerWidth;
@@ -14,14 +18,34 @@ class World {
     document.body.appendChild(this.canvas);
     this.ctx = this.canvas.getContext('2d');
     window.requestAnimationFrame(this.animationCallback.bind(this));
-    this.gravity = new Vector(0, 0.16);
+    this.gravity = new Vector(0, .8);
     this.base = window.innerHeight - 100;
     this.structures.push(new SoftCircle(this, new Vector(this.canvas.width / 2 - 150, this.base - 200), 100, 5));
     this.structures.push(new SoftCircle(this, new Vector(this.canvas.width / 2 + 150, this.base - 200), 100, 16));
+    document.body.addEventListener("mousedown", this.handleMousedown.bind(this));
+    document.body.addEventListener("mousemove", this.handleMousemove.bind(this));
+    window.addEventListener("mouseup", this.handleMouseup.bind(this));
+  }
+  handleMousedown(event: MouseEvent) {
+    this.mousePosition = new Vector(event.clientX, event.clientY);
+    let point: Point;
+    for (let i = 0; i < this.structures.length; i++) {
+      if (point = this.structures[i].testPoint(this.mousePosition)) break;
+    }
+    this.draggingPoint = point;
+  }
+  handleMousemove(event: MouseEvent) {
+    this.mousePosition = new Vector(event.clientX, event.clientY);
+  }
+  handleMouseup(event: MouseEvent) {
+    this.mousePosition = new Vector(event.clientX, event.clientY);
+    this.draggingPoint = null;
   }
   animationCallback(time: number) {
     const deltaTime = 0.016;//(time - this.lastTime) / 1000;
     this.lastTime = time;
+
+    this.draggingPoint?.addForce(this.mousePosition.copy().sub(this.draggingPoint.position).scale(0.1));
 
     this.ctx.fillStyle = "#ffff";
     this.ctx.strokeStyle = "#fff0";
@@ -33,8 +57,8 @@ class World {
     this.ctx.lineTo(this.canvas.width, this.canvas.height - 100);
     this.ctx.stroke();
 
-    this.structures[0].addTorque(-0.001);
-    this.structures[1].addTorque(0.001);
+    //this.structures[0].addTorque(-0.001);
+    //this.structures[1].addTorque(0.001);
 
     this.structures.forEach(s => s.update(deltaTime));
     this.structures.forEach(s => s.draw(this.ctx));
@@ -46,7 +70,7 @@ class World {
 class Point {
   velocity: Vector;
   acceleration: Vector;
-  constructor(public position: Vector/*, private world: World*/, public mass: number = 1) {
+  constructor(public structure: SoftStructure, public position: Vector/*, private world: World*/, public mass: number = 1) {
     this.acceleration = new Vector();
     this.velocity = new Vector();
   }
@@ -56,6 +80,15 @@ class Point {
     ctx.beginPath();
     ctx.arc(this.position.x, this.position.y, 2, 0, Math.PI * 2);
     ctx.fill();
+
+    if (this.structure.world.draggingPoint == this) {
+      ctx.strokeStyle = "#000";
+      ctx.lineWidth = 1;
+      ctx.beginPath();
+      ctx.moveTo(this.position.x, this.position.y);
+      ctx.lineTo(this.structure.world.mousePosition.x, this.structure.world.mousePosition.y);
+      ctx.stroke();
+    }
   }
   addForce(force: Vector) {
     this.acceleration.add(force.copy().scale(1 / this.mass));
@@ -75,22 +108,22 @@ class Point {
     }
     this.acceleration = new Vector();
   }
-  distance(p: Point) {
-    return this.position.distance(p.position);
-  }
   rotateAround(angle: number, around: Vector) {
     this.position.rotateAround(angle, around);
+  }
+  testPoint(position: Vector, maxDistanceSq: number) {
+    return this.position.distanceSq(position) <= maxDistanceSq;
   }
 }
 
 class Spring {
   constructor(public pointA: Point, public pointB: Point, public constant = 3, public distance?: number) {
     if (!distance) {
-      this.distance = pointA.distance(pointB);
+      this.distance = pointA.position.distance(pointB.position);
     }
   }
   update(delta: number) {
-    const d = this.distance - this.pointA.distance(this.pointB);
+    const d = this.distance - this.pointA.position.distance(this.pointB.position);
     const forceVal = d * this.constant;
     const direction = this.pointA.position.copy().sub(this.pointB.position).normalize();
     direction.scale(forceVal);
@@ -160,9 +193,14 @@ class Vector {
 }
 
 class SoftStructure {
+  testPoint(position: Vector, maxDistanceSq: number = mousePickDistancesq) {
+    for (let i = 0; i < this.points.length; i++) {
+      if (this.points[i].testPoint(position, maxDistanceSq)) return this.points[i];
+    }
+  }
   springs: Spring[] = [];
   points: Point[] = [];
-  constructor(private world: World) { }
+  constructor(public world: World) { }
   update(delta: number) {
     this.points.forEach(p => p.addForce(this.world.gravity.copy()));
     this.springs.forEach(s => s.update(delta));
@@ -202,12 +240,12 @@ class SoftCircle extends SoftStructure {
   constructor(world: World, center: Vector, radius: number = 50, sides: number = 8) {
     super(world);
     const angle = (Math.PI * 2) / sides;
-    this.centerPoint = new Point(center.copy());
+    this.centerPoint = new Point(this, center.copy());
     this.points.push(this.centerPoint);
     let lastPoint;
     let firstPoint;
     for (let i = 0; i < sides; i++) {
-      const point = new Point(center.copy().add(new Vector(Math.cos(angle * i) * radius, Math.sin(angle * i) * radius)))
+      const point = new Point(this, center.copy().add(new Vector(Math.cos(angle * i) * radius, Math.sin(angle * i) * radius)))
       if (i == 0) firstPoint = point;
       this.points.push(point);
       this.springs.push(new Spring(this.centerPoint, point))
