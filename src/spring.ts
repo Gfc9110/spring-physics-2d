@@ -1,7 +1,7 @@
 import { Point } from "./point";
 
 export class Spring {
-  constructor(public pointA: Point, public pointB: Point, public constant = 3, public distance?: number) {
+  constructor(public pointA: Point, public pointB: Point, public constant = 200, public distance?: number) {
     if (!distance) {
       this.distance = pointA.position.distance(pointB.position);
     }
@@ -9,7 +9,7 @@ export class Spring {
   update(delta: number) {
     const direction = this.pointA.position.copy().sub(this.pointB.position).normalize();
     if (direction.length > 0) {
-      const d = this.distance - this.pointA.position.distance(this.pointB.position);
+      const d = (this.distance - this.pointA.position.distance(this.pointB.position)) / this.distance;
       const forceVal = d * this.constant;
       direction.scale(forceVal);
       this.pointA.addForce(direction);
