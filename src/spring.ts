@@ -7,12 +7,14 @@ export class Spring {
     }
   }
   update(delta: number) {
-    const d = this.distance - this.pointA.position.distance(this.pointB.position);
-    const forceVal = d * this.constant;
     const direction = this.pointA.position.copy().sub(this.pointB.position).normalize();
-    direction.scale(forceVal);
-    this.pointA.addForce(direction);
-    this.pointB.addForce(direction.scale(-1));
+    if (direction.length > 0) {
+      const d = this.distance - this.pointA.position.distance(this.pointB.position);
+      const forceVal = d * this.constant;
+      direction.scale(forceVal);
+      this.pointA.addForce(direction);
+      this.pointB.addForce(direction.scale(-1));
+    }
   }
   draw(ctx: CanvasRenderingContext2D) {
     ctx.strokeStyle = "#000";

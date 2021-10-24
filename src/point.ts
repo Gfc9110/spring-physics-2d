@@ -4,7 +4,7 @@ import { Vector } from "./vector";
 export class Point {
   velocity: Vector;
   acceleration: Vector;
-  constructor(public structure: SoftStructure, public position: Vector/*, private world: World*/, public mass: number = 1) {
+  constructor(public structure: SoftStructure, public position: Vector/*, private world: World*/, public mass: number = 1, public isFixed = false) {
     this.acceleration = new Vector();
     this.velocity = new Vector();
   }
@@ -29,18 +29,20 @@ export class Point {
   }
   update(delta: number, base?: number) {
     //console.log(this.acceleration);
-    this.velocity.add(this.acceleration.scale(delta));
+    if (!this.isFixed) {
+      this.velocity.add(this.acceleration.scale(delta));
 
-    this.velocity.scale(0.999);
+      this.velocity.scale(0.999);
 
-    this.position.add(this.velocity);
+      this.position.add(this.velocity);
 
-    if (base && this.position.y > base) {
-      this.position.y = base;
-      this.velocity.y = 0;
-      this.velocity.scale(0.8);
+      if (base && this.position.y > base) {
+        this.position.y = base;
+        this.velocity.y = 0;
+        this.velocity.scale(0.8);
+      }
+      this.acceleration = new Vector();
     }
-    this.acceleration = new Vector();
   }
   rotateAround(angle: number, around: Vector) {
     this.position.rotateAround(angle, around);

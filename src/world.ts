@@ -1,5 +1,5 @@
 import { Point } from "./point";
-import { SoftStructure, SoftCircle } from "./structures";
+import { SoftStructure, SoftCircle, Cord } from "./structures";
 import { Vector } from "./vector";
 
 export class World {
@@ -20,8 +20,11 @@ export class World {
     window.requestAnimationFrame(this.animationCallback.bind(this));
     this.gravity = new Vector(0, .8);
     this.base = window.innerHeight - 100;
+
     this.structures.push(new SoftCircle(this, new Vector(this.canvas.width / 2 - 150, this.base - 200), 100, 5));
     this.structures.push(new SoftCircle(this, new Vector(this.canvas.width / 2 + 150, this.base - 200), 100, 16));
+    this.structures.push(new Cord(this, new Vector(this.canvas.width / 2 - 300, this.base - 600), new Vector(this.canvas.width / 2 + 300, this.base - 600), 20, true, true, 60));
+
     document.body.addEventListener("mousedown", this.handleMousedown.bind(this));
     document.body.addEventListener("mousemove", this.handleMousemove.bind(this));
     window.addEventListener("mouseup", this.handleMouseup.bind(this));
@@ -50,6 +53,10 @@ export class World {
     this.ctx.fillStyle = "#ffff";
     this.ctx.strokeStyle = "#fff0";
     this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
+    
+    this.ctx.fillStyle = "#000";
+    this.ctx.font = "bold 16px sans-serif"
+    this.ctx.fillText("Drag with mouse", 20, 30);
 
     this.ctx.strokeStyle = "#000";
     this.ctx.beginPath();

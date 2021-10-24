@@ -48,19 +48,18 @@ export class SoftStructure {
 }
 
 export class SoftCircle extends SoftStructure {
-  centerPoint: Point;
   constructor(world: World, center: Vector, radius: number = 50, sides: number = 8) {
     super(world);
     const angle = (Math.PI * 2) / sides;
-    this.centerPoint = new Point(this, center.copy());
-    this.points.push(this.centerPoint);
+    let centerPoint = new Point(this, center.copy());
+    this.points.push(centerPoint);
     let lastPoint;
     let firstPoint;
     for (let i = 0; i < sides; i++) {
       const point = new Point(this, center.copy().add(new Vector(Math.cos(angle * i) * radius, Math.sin(angle * i) * radius)))
       if (i == 0) firstPoint = point;
       this.points.push(point);
-      this.springs.push(new Spring(this.centerPoint, point))
+      this.springs.push(new Spring(centerPoint, point))
       if (lastPoint) {
         this.springs.push(new Spring(point, lastPoint))
       }
@@ -75,5 +74,21 @@ export class SoftCircle extends SoftStructure {
     //this.addTorque(0.001);
     //console.log(this.center);
     super.update(delta);
+  }
+}
+
+export class Cord extends SoftStructure {
+  constructor(world: World, startPosition: Vector, endPosition: Vector, steps: number = 30, firstFixed = false, lastFixed = false, tension = 5) {
+    super(world);
+    const step = endPosition.copy().sub(startPosition).scale(1 / steps)
+    let lastPoint: Point;
+    for (let i = 0; i < steps; i++) {
+      const point = new Point(this, startPosition.add(step).copy(), 1, (i == 0 && firstFixed) || (i == steps - 1) && lastFixed);
+      this.points.push(point);
+      if (lastPoint) {
+        this.springs.push(new Spring(point, lastPoint, tension));
+      }
+      lastPoint = point;
+    }
   }
 }
