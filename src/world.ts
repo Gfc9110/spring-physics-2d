@@ -45,7 +45,7 @@ export class World {
     this.draggingPoint = null;
   }
   animationCallback(time: number) {
-    const deltaTime = (time - this.lastTime) / 1000;
+    const deltaTime = Math.min((time - this.lastTime) / 1000, 0.16);
     this.lastTime = time;
 
     this.draggingPoint?.addForce(this.mousePosition.copy().sub(this.draggingPoint.position).scale(0.1));
