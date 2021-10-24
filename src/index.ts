@@ -6,8 +6,7 @@ class World {
   lastTime: number = 0;
   gravity: Vector;
   base: number;
-  points: Point[] = [];
-  springs: Spring[] = [];
+  structures: SoftStructure[] = [];
   constructor() {
     this.canvas = document.createElement("canvas");
     this.canvas.width = window.innerWidth;
@@ -17,15 +16,7 @@ class World {
     window.requestAnimationFrame(this.animationCallback.bind(this));
     this.gravity = new Vector(0, 10);
     this.base = window.innerHeight - 100;
-    let a = new Point(new Vector(400, 50), this);
-    let b = new Point(new Vector(350, 150), this);
-    let c = new Point(new Vector(450, 150), this);
-    let ab = new Spring(a, b, 100, 10);
-    let bc = new Spring(b, c, 100, 10);
-    let ca = new Spring(c, a, 100, 10);
-
-    this.points.push(a, b, c);
-    this.springs.push(ab, bc, ca);
+    this.structures.push(new SoftCircle(this, new Vector(300, this.base - 100), 100, 16));
   }
   animationCallback(time: number) {
     const deltaTime = (time - this.lastTime) / 1000;
@@ -41,12 +32,8 @@ class World {
     this.ctx.lineTo(this.canvas.width, this.canvas.height - 100);
     this.ctx.stroke();
 
-    this.points.forEach(p => p.addForce(this.gravity.copy().scale(deltaTime)));
-    this.springs.forEach(s => s.update(deltaTime));
-    this.points.forEach(p => p.update(deltaTime));
-
-    this.springs.forEach(s => s.draw(this.ctx));
-    this.points.forEach(p => p.draw(this.ctx));
+    this.structures.forEach(s => s.update(deltaTime));
+    this.structures.forEach(s => s.draw(this.ctx));
 
     window.requestAnimationFrame(this.animationCallback.bind(this));
   }
@@ -55,7 +42,7 @@ class World {
 class Point {
   velocity: Vector;
   acceleration: Vector;
-  constructor(public position: Vector, private world: World) {
+  constructor(public position: Vector/*, private world: World*/) {
     this.velocity = new Vector();
   }
   draw(ctx: CanvasRenderingContext2D) {
@@ -69,16 +56,17 @@ class Point {
     this.acceleration = this.acceleration || new Vector();
     this.acceleration.add(force);
   }
-  update(delta: number) {
+  update(delta: number, base?: number) {
     this.velocity.add(this.acceleration.scale(delta));
 
     this.velocity.scale(0.999);
 
     this.position.add(this.velocity);
 
-    if (this.position.y > this.world.base) {
-      this.position.y = this.world.base;
+    if (base && this.position.y > base) {
+      this.position.y = base;
       this.velocity.y = 0;
+      this.velocity.scale(0.5);
     }
     this.acceleration = new Vector();
   }
@@ -88,7 +76,11 @@ class Point {
 }
 
 class Spring {
-  constructor(public pointA: Point, public pointB: Point, public distance = 10, public constant = 1) { }
+  constructor(public pointA: Point, public pointB: Point, public constant = 300, public distance?: number) {
+    if (!distance) {
+      this.distance = pointA.distance(pointB);
+    }
+  }
   update(delta: number) {
     const d = this.distance - this.pointA.distance(this.pointB);
     const forceVal = d * this.constant;
@@ -141,6 +133,50 @@ class Vector {
   }
   toString() {
     return `{ x : ${this.x} , y : ${this.y}}`;
+  }
+}
+
+class SoftStructure {
+  springs: Spring[] = [];
+  points: Point[] = [];
+  constructor(private world: World) { }
+  update(delta: number) {
+    this.points.forEach(p => p.addForce(this.world.gravity.copy().scale(delta)));
+    this.springs.forEach(s => s.update(delta));
+    this.points.forEach(p => p.update(delta, this.world.base));
+  }
+  draw(ctx: CanvasRenderingContext2D) {
+    this.springs.forEach(s => s.draw(ctx));
+    this.points.forEach(p => p.draw(ctx));
+  }
+}
+
+class SoftCircle extends SoftStructure {
+  centerPoint: Point;
+  constructor(world: World, center: Vector, radius: number = 50, sides: number = 8) {
+    super(world);
+    const angle = (Math.PI * 2) / sides;
+    this.centerPoint = new Point(center.copy());
+    this.points.push(this.centerPoint);
+    let lastPoint;
+    let firstPoint;
+    for (let i = 0; i < sides; i++) {
+      const point = new Point(center.copy().add(new Vector(Math.cos(angle * i) * radius, Math.sin(angle * i) * radius)))
+      if (i == 0) firstPoint = point;
+      this.points.push(point);
+      this.springs.push(new Spring(this.centerPoint, point))
+      if (lastPoint) {
+        this.springs.push(new Spring(point, lastPoint))
+      }
+      if (i == sides - 1) {
+        this.springs.push(new Spring(point, firstPoint))
+      }
+      lastPoint = point
+    }
+  }
+  update(delta: number) {
+    this.centerPoint.addForce(new Vector(1, 0))
+    super.update(delta);
   }
 }
 
