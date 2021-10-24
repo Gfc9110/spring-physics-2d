@@ -71,7 +71,7 @@ export class Point {
       } else {
         /*let opposingAcceleration = this.velocity.scale(-1);
         let totalMass = */
-        this.velocity = new Vector();
+        this.velocity.scale(0.8);
       }
       if (base && this.position.y > base) {
         this.position.y = base;

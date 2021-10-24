@@ -89,7 +89,7 @@ export class SoftCircle extends SoftStructure {
       const point = new Point(this, center.copy().add(new Vector(Math.cos(angle * i) * radius, Math.sin(angle * i) * radius)))
       if (i == 0) firstPoint = point;
       this.points.push(point);
-      this.springs.push(new Spring(centerPoint, point, stiffness))
+      this.springs.push(new Spring(centerPoint, point, stiffness * 2))
       if (lastPoint) {
         this.springs.push(new Spring(point, lastPoint, stiffness))
       }
