@@ -21,9 +21,9 @@ export class World {
     this.gravity = new Vector(0, .8);
     this.base = window.innerHeight - 100;
 
-    this.structures.push(new Cord(this, new Vector(this.canvas.width / 2 - 300, this.base - 600), new Vector(this.canvas.width / 2 + 300, this.base - 600), 60, true, true, 300));
-    this.structures.push(new SoftCircle(this, new Vector(this.canvas.width / 2 - 150, this.base - 200), 100, 4).rotate(Math.PI/4));
-    this.structures.push(new SoftCircle(this, new Vector(this.canvas.width / 2 + 150, this.base - 200), 100, 4).rotate(Math.PI/4));
+    //this.structures.push(new Cord(this, new Vector(this.canvas.width / 2 - 300, this.base - 600), new Vector(this.canvas.width / 2 + 300, this.base - 600), 60, true, true, 300));
+    this.structures.push(new SoftCircle(this, new Vector(this.canvas.width / 2 - 150, this.base - 200), 100, 3).rotate(0));
+    this.structures.push(new SoftCircle(this, new Vector(this.canvas.width / 2 + 150, this.base - 200), 100, 3).rotate(0));
 
     document.body.addEventListener("mousedown", this.handleMousedown.bind(this));
     document.body.addEventListener("mousemove", this.handleMousemove.bind(this));
@@ -45,7 +45,7 @@ export class World {
     this.draggingPoint = null;
   }
   animationCallback(time: number) {
-    const deltaTime = Math.min((time - this.lastTime) / 1000, 0.16);
+    const deltaTime = 0.016;
     this.lastTime = time;
 
     this.draggingPoint?.addForce(this.mousePosition.copy().sub(this.draggingPoint.position).scale(0.1));
