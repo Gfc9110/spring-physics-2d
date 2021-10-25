@@ -27,8 +27,8 @@ export class SoftStructure {
   }
   draw(ctx: CanvasRenderingContext2D) {
     let bb = this.boundingBox;
-    ctx.strokeStyle = "#0005";
-    this.world.structures.filter(s => s != this && s.boundingBox.intersects(bb)).forEach(_ => ctx.strokeStyle = "#f005");
+    ctx.strokeStyle = "#0002";
+    this.world.structures.filter(s => s != this && s.boundingBox.intersects(bb)).forEach(_ => ctx.strokeStyle = "#f002");
     ctx.strokeRect(bb.position.x, bb.position.y, bb.size.x, bb.size.y)
     this.springs.forEach(s => s.draw(ctx));
     this.points.forEach(p => p.draw(ctx));
