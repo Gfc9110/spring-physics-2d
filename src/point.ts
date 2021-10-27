@@ -58,7 +58,7 @@ export class Segment {
 
 export class Point {
   velocity: Vector;
-  restitution = 1;
+  restitution = 0;
   acceleration: Vector;
   _neighbors: Point[];
   _neighborsSegments: Segment[];
@@ -112,21 +112,30 @@ export class Point {
 
         intersectingSprings.forEach(is => {
           console.log("intetrsecting")
-          let { projection } = is.segment.pointProjection(newPosition)
+          let { projection, t } = is.segment.pointProjection(newPosition)
           let springMass = is.pointA.mass + is.pointB.mass;
-          let doubleSpringMass = 2 * springMass;
+          //let doubleSpringMass = 2 * springMass;
           let springVelocity = is.pointA.velocity.copy().add(is.pointB.velocity).scale(0.5);
 
-          let sumMass = this.mass + springMass;
+          //let sumMass = this.mass + springMass;
 
-          let newVelocity = this.velocity.copy().scale((this.mass - springMass) / sumMass).add(springVelocity.copy().scale(doubleSpringMass / sumMass));
+          //let totalEnergy = springVelocity.copy().add(this.velocity);
 
-          let newSpringVelocity = this.velocity.copy().scale(doubleSpringMass / sumMass).add(springVelocity.copy().scale((springMass - this.mass) / sumMass));
+          /*const restC = (((is.pointA.restitution + is.pointB.restitution) / 2) + this.restitution) / 2;
 
-          newSpringVelocity.scale(1 / springMass);
+          let newVelocity = this.velocity.copy().scale((this.mass - springMass) / sumMass).add(springVelocity.copy().scale(doubleSpringMass / sumMass)).scale(restC);
 
-          is.pointA.velocity = newSpringVelocity.copy().scale(is.pointB.mass);
-          is.pointB.velocity = newSpringVelocity.scale(is.pointA.mass);
+          let newSpringVelocity = this.velocity.copy().scale(doubleSpringMass / sumMass).add(springVelocity.copy().scale((springMass - this.mass) / sumMass)).scale(restC);
+
+          newSpringVelocity.scale(1 / (is.pointA.position.distance(is.pointB.position)));
+
+          is.pointA.velocity = newSpringVelocity.copy().scale(projection.distance(is.pointB.position));
+          is.pointB.velocity = newSpringVelocity.scale(projection.distance(is.pointA.position));*/
+
+         let newVelocity = this.velocity.projectOn(is.pointA.position.copy().sub(is.pointB.position)).add(springVelocity);
+
+          is.pointA.velocity.add(this.velocity.copy().sub(newVelocity).scale(1 / is.pointA.position.copy().sub(is.pointB.position).length).scale(projection.copy().sub(is.pointB.position).length))
+          is.pointB.velocity.add(this.velocity.copy().sub(newVelocity).scale(1 / is.pointA.position.copy().sub(is.pointB.position).length).scale(projection.copy().sub(is.pointA.position).length))
 
           this.velocity = newVelocity;
           newPosition = projection;
