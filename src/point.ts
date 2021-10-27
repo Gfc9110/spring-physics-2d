@@ -113,7 +113,7 @@ export class Point {
         intersectingSprings.forEach(is => {
           console.log("intetrsecting")
           let { projection, t } = is.segment.pointProjection(newPosition)
-          let springMass = is.pointA.mass + is.pointB.mass;
+          //let springMass = is.pointA.mass + is.pointB.mass;
           //let doubleSpringMass = 2 * springMass;
           let springVelocity = is.pointA.velocity.copy().add(is.pointB.velocity).scale(0.5);
 
