@@ -78,15 +78,15 @@ export class SoftStructure {
 }
 
 export class SoftCircle extends SoftStructure {
-  constructor(world: World, center: Vector, radius: number = 50, sides: number = 8, stiffness = 500, centerFixed = false) {
+  constructor(world: World, center: Vector, radius: number = 50, sides: number = 8, stiffness = 500, centerFixed = false, mass = 1) {
     super(world);
     const angle = (Math.PI * 2) / sides;
-    let centerPoint = new Point(this, center.copy(), 1, centerFixed);
+    let centerPoint = new Point(this, center.copy(), mass, centerFixed);
     this.points.push(centerPoint);
     let lastPoint;
     let firstPoint;
     for (let i = 0; i < sides; i++) {
-      const point = new Point(this, center.copy().add(new Vector(Math.cos(angle * i) * radius, Math.sin(angle * i) * radius)), 1, false, true)
+      const point = new Point(this, center.copy().add(new Vector(Math.cos(angle * i) * radius, Math.sin(angle * i) * radius)), mass, false, true)
       if (i == 0) firstPoint = point;
       this.points.push(point);
       this.springs.push(new Spring(centerPoint, point, stiffness))
