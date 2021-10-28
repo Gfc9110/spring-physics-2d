@@ -68,9 +68,12 @@ export class Point {
   }
   draw(ctx: CanvasRenderingContext2D) {
     ctx.fillStyle = "#000";
+    if(this.isFixed) {
+      ctx.fillStyle = "#00f";
+    }
     ctx.strokeStyle = "#0000";
     ctx.beginPath();
-    ctx.arc(this.position.x, this.position.y, 2, 0, Math.PI * 2);
+    ctx.arc(this.position.x, this.position.y, this.isFixed ? 4 : 2, 0, Math.PI * 2);
     ctx.fill();
 
     if (this.structure.world.draggingPoint == this) {
@@ -105,7 +108,7 @@ export class Point {
         let intersectingSprings = this.structure.world.structures.filter(st => st != this.structure && st.boundingBox.intersects(this.structure.boundingBox)).map(st => {
           let intSprings = st.springs.filter(s => s.isSide && testSegments.some(ts => ts.intersects(s.segment)));
           if (testSegments.every(ts => intSprings.find(s => ts.intersects(s.segment)))) {
-            return intSprings[0]
+            return this.closestSpring(intSprings);
           }
           return null
         }).filter(s => !!s && !filter.find(s1 => s1 == s) && filter.push(s))//.flat().filter(s => testSegments.every(ts => ts.intersects(s.segment)))
@@ -133,8 +136,8 @@ export class Point {
           const springNormalVelocityAtImpact = springVelocityAtImpact.copy().sub(springTangentVelocityAtImpact);
           const normalVelocity = this.velocity.copy().sub(tangentVelocity);
 
-          springTangentVelocityAtImpact.scale(0.9);
-          tangentVelocity.scale(0.9);
+          springTangentVelocityAtImpact.scale(0.7);
+          tangentVelocity.scale(0.7);
 
           const finalNormalVelocity = springNormalVelocityAtImpact.copy().scale(springMassAtImpact).add(normalVelocity.copy().scale(this.mass)).scale(1 / (this.mass + springMassAtImpact))
 
@@ -194,7 +197,7 @@ export class Point {
       if (base && this.position.y > base) {
         this.position.y = base;
         this.velocity.y = 0;
-        this.velocity.scale(0.9);
+        this.velocity.scale(0.7);
       }
       this.acceleration = new Vector();
     }
@@ -210,5 +213,18 @@ export class Point {
   }
   neighborsSegments(position?: Vector, external = false) {
     return this.neighbors.filter(p => external ? p.isExternal : true).map(p => new Segment(p.position, position || this.position));
+  }
+  closestSpring(springs: Spring[]) {
+    let minDistance = Infinity;
+    let closestSpring: Spring;
+    springs.forEach(s => {
+      let { projection } = new Segment(s.pointA.position, s.pointB.position).pointProjection(this.position);
+      let distance = projection.distance(this.position);
+      if (distance < minDistance) {
+        minDistance = distance;
+        closestSpring = s;
+      }
+    });
+    return closestSpring;
   }
 }

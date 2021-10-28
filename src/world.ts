@@ -23,7 +23,7 @@ export class World {
 
     //this.structures.push(new Cord(this, new Vector(this.canvas.width / 2 - 300, this.base - 600), new Vector(this.canvas.width / 2 + 300, this.base - 600), 60, true, true, 300));
     this.structures.push(new SoftCircle(this, new Vector(this.canvas.width / 2 - 250, this.base - 200), 100, 3).rotate(0));
-    this.structures.push(new SoftCircle(this, new Vector(this.canvas.width / 2, this.base - 200), 100, 4).rotate(Math.PI / 4));
+    this.structures.push(new SoftCircle(this, new Vector(this.canvas.width / 2, this.base - 200), 100, 4, 500, true).rotate(Math.PI / 4));
     this.structures.push(new SoftCircle(this, new Vector(this.canvas.width / 2 + 200, this.base - 200), 100, 3).rotate(0));
 
     document.body.addEventListener("mousedown", this.handleMousedown.bind(this));
