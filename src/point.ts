@@ -115,7 +115,37 @@ export class Point {
           let { projection, t } = is.segment.pointProjection(newPosition)
           //let springMass = is.pointA.mass + is.pointB.mass;
           //let doubleSpringMass = 2 * springMass;
-          let springVelocity = is.pointA.velocity.copy().add(is.pointB.velocity).scale(0.5);
+          //let springVelocity = is.pointA.velocity.copy().add(is.pointB.velocity).scale(0.5);
+
+          const radiusA = projection.distance(is.pointA.position);
+          const radiusB = projection.distance(is.pointB.position);
+
+          const momentA = radiusA * is.pointA.mass;
+          const momentB = radiusB * is.pointB.mass;
+          const totalMoment = momentA + momentB;
+
+          const springVelocityAtImpact = is.pointA.velocity.copy().scale(1 - t).add(is.pointB.velocity.copy().scale(t));
+          const springMassAtImpact = is.pointA.mass * (1 - t) + is.pointB.mass * t;
+
+          const springTangentVelocityAtImpact = springVelocityAtImpact.projectOn(is.pointA.position.copy().sub(is.pointB.position));
+          const tangentVelocity = this.velocity.projectOn(is.pointA.position.copy().sub(is.pointB.position));
+
+          const springNormalVelocityAtImpact = springVelocityAtImpact.copy().sub(springTangentVelocityAtImpact);
+          const normalVelocity = this.velocity.copy().sub(tangentVelocity);
+
+          springTangentVelocityAtImpact.scale(0.9);
+          tangentVelocity.scale(0.9);
+
+          const finalNormalVelocity = springNormalVelocityAtImpact.copy().scale(springMassAtImpact).add(normalVelocity.copy().scale(this.mass)).scale(1 / (this.mass + springMassAtImpact))
+
+          const finalSpringVelocityAtImpact = finalNormalVelocity.copy().add(springTangentVelocityAtImpact)
+
+          const springVelocityDifferenceAtImpact = finalSpringVelocityAtImpact.copy().sub(springVelocityAtImpact);
+
+          is.pointA.velocity.add(springVelocityDifferenceAtImpact.copy().scale(momentB / totalMoment))
+          is.pointB.velocity.add(springVelocityDifferenceAtImpact.copy().scale(momentA / totalMoment))
+
+          //let newVelocity = this.velocity.projectOn(is.pointA.position.copy().sub(is.pointB.position));
 
           //let sumMass = this.mass + springMass;
 
@@ -132,12 +162,17 @@ export class Point {
           is.pointA.velocity = newSpringVelocity.copy().scale(projection.distance(is.pointB.position));
           is.pointB.velocity = newSpringVelocity.scale(projection.distance(is.pointA.position));*/
 
-         let newVelocity = this.velocity.projectOn(is.pointA.position.copy().sub(is.pointB.position)).add(springVelocity);
+          //let newVelocity: Vector = this.velocity.projectOn(is.pointA.position.copy().sub(is.pointB.position));
+          //newVelocity.scale(newVelocity.length / this.velocity.length).add(springVelocity);
 
-          is.pointA.velocity.add(this.velocity.copy().sub(newVelocity).scale(1 / is.pointA.position.copy().sub(is.pointB.position).length).scale(projection.copy().sub(is.pointB.position).length))
-          is.pointB.velocity.add(this.velocity.copy().sub(newVelocity).scale(1 / is.pointA.position.copy().sub(is.pointB.position).length).scale(projection.copy().sub(is.pointA.position).length))
+          //is.pointA.velocity.add(this.velocity.copy().sub(newVelocity).scale(1 / is.pointA.position.copy().sub(is.pointB.position).length).scale(projection.copy().sub(is.pointB.position).length * 2))
+          //is.pointB.velocity.add(this.velocity.copy().sub(newVelocity).scale(1 / is.pointA.position.copy().sub(is.pointB.position).length).scale(projection.copy().sub(is.pointA.position).length * 2))
 
-          this.velocity = newVelocity;
+          //newVelocity.scale(newVelocity.length / this.velocity.length);
+
+          //newVelocity.add(springVelocity);
+
+          this.velocity = tangentVelocity.add(finalNormalVelocity);
           newPosition = projection;
         });
 
@@ -159,7 +194,7 @@ export class Point {
       if (base && this.position.y > base) {
         this.position.y = base;
         this.velocity.y = 0;
-        this.velocity.scale(0.8);
+        this.velocity.scale(0.9);
       }
       this.acceleration = new Vector();
     }
