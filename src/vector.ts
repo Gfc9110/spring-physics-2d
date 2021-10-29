@@ -28,6 +28,9 @@ export class Vector {
   get length() {
     return this.distance(Vector.ZERO);
   }
+  get lengthSq() {
+    return this.distanceSq(Vector.ZERO);
+  }
   normalize() {
     return this.scale(1 / this.length);
   }
@@ -47,5 +50,16 @@ export class Vector {
     this.x = around.x + (x * Math.cos(angle)) - (y * Math.sin(angle));
     this.y = around.y + (x * Math.sin(angle)) + (y * Math.cos(angle));
     return this;
+  }
+  mult(v: Vector) {
+    this.x *= v.x;
+    this.y *= v.y;
+    return this;
+  }
+  dot(v: Vector) {
+    return this.x * v.x + this.y * v.y;
+  }
+  projectOn(v: Vector) {
+    return v.copy().scale(this.dot(v) / v.lengthSq);
   }
 }

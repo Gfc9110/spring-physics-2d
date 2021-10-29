@@ -21,14 +21,14 @@ export class SoftStructure {
   points: Point[] = [];
   constructor(public world: World) { }
   update(delta: number) {
-    this.points.forEach(p => p.addForce(this.world.gravity.copy()));
-    this.springs.forEach(s => s.update(delta));
+    this.points.forEach(p => p.addForce(this.world.gravity.copy().scale(p.mass)));
+    this.springs.forEach(s => s.update());
     this.points.forEach(p => p.update(delta, this.world.base));
   }
   draw(ctx: CanvasRenderingContext2D) {
     let bb = this.boundingBox;
-    ctx.strokeStyle = "#0005";
-    this.world.structures.filter(s => s != this && s.boundingBox.intersects(bb)).forEach(_ => ctx.strokeStyle = "#f005");
+    ctx.strokeStyle = "#0002";
+    this.world.structures.filter(s => s != this && s.boundingBox.intersects(bb)).forEach(_ => ctx.strokeStyle = "#f002");
     ctx.strokeRect(bb.position.x, bb.position.y, bb.size.x, bb.size.y)
     this.springs.forEach(s => s.draw(ctx));
     this.points.forEach(p => p.draw(ctx));
@@ -78,23 +78,23 @@ export class SoftStructure {
 }
 
 export class SoftCircle extends SoftStructure {
-  constructor(world: World, center: Vector, radius: number = 50, sides: number = 8, stiffness = 200) {
+  constructor(world: World, center: Vector, radius: number = 50, sides: number = 8, stiffness = 500, centerFixed = false, mass = 1) {
     super(world);
     const angle = (Math.PI * 2) / sides;
-    let centerPoint = new Point(this, center.copy());
+    let centerPoint = new Point(this, center.copy(), mass, centerFixed);
     this.points.push(centerPoint);
     let lastPoint;
     let firstPoint;
     for (let i = 0; i < sides; i++) {
-      const point = new Point(this, center.copy().add(new Vector(Math.cos(angle * i) * radius, Math.sin(angle * i) * radius)))
+      const point = new Point(this, center.copy().add(new Vector(Math.cos(angle * i) * radius, Math.sin(angle * i) * radius)), mass, false, true)
       if (i == 0) firstPoint = point;
       this.points.push(point);
-      this.springs.push(new Spring(centerPoint, point, stiffness * 2))
+      this.springs.push(new Spring(centerPoint, point, stiffness))
       if (lastPoint) {
-        this.springs.push(new Spring(point, lastPoint, stiffness))
+        this.springs.push(new Spring(point, lastPoint, stiffness, null, true))
       }
       if (i == sides - 1) {
-        this.springs.push(new Spring(point, firstPoint, stiffness))
+        this.springs.push(new Spring(point, firstPoint, stiffness, null, true))
       }
       lastPoint = point
     }
@@ -116,7 +116,7 @@ export class Cord extends SoftStructure {
       const point = new Point(this, startPosition.add(step).copy(), 1, (i == 0 && firstFixed) || (i == steps - 1) && lastFixed);
       this.points.push(point);
       if (lastPoint) {
-        this.springs.push(new Spring(point, lastPoint, tension));
+        this.springs.push(new Spring(point, lastPoint, tension, null, true));
       }
       lastPoint = point;
     }
