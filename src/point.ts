@@ -68,7 +68,7 @@ export class Point {
   }
   draw(ctx: CanvasRenderingContext2D) {
     ctx.fillStyle = "#000";
-    if(this.isFixed) {
+    if (this.isFixed) {
       ctx.fillStyle = "#00f";
     }
     ctx.strokeStyle = "#0000";
@@ -150,11 +150,28 @@ export class Point {
 
       this.position = newPosition;
 
-      if (base && this.position.y > base) {
-        this.position.y = base;
+      let bounds = this.structure.world.bounds;
+
+      if (this.position.x < bounds.position.x) {
+        this.position.x = bounds.position.x;
+        this.velocity.x = 0;
+        this.velocity.scale(0.7);
+      } else if (this.position.x > bounds.position.x + bounds.size.x) {
+        this.position.x = bounds.position.x + bounds.size.x;
+        this.velocity.x = 0;
+        this.velocity.scale(0.7);
+      }
+
+      if (this.position.y < bounds.position.y) {
+        //this.position.y = bounds.position.y;
+        //this.velocity.y = 0;
+        //this.velocity.scale(0.7);
+      } else if (this.position.y > bounds.position.y + bounds.size.y) {
+        this.position.y = bounds.position.y + bounds.size.y;
         this.velocity.y = 0;
         this.velocity.scale(0.7);
       }
+
       this.acceleration = new Vector();
     }
   }

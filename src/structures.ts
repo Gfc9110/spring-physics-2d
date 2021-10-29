@@ -22,7 +22,7 @@ export class SoftStructure {
   constructor(public world: World) { }
   update(delta: number) {
     this.points.forEach(p => p.addForce(this.world.gravity.copy().scale(p.mass)));
-    this.springs.forEach(s => s.update(delta));
+    this.springs.forEach(s => s.update());
     this.points.forEach(p => p.update(delta, this.world.base));
   }
   draw(ctx: CanvasRenderingContext2D) {

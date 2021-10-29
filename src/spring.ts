@@ -6,7 +6,7 @@ export class Spring {
       this.distance = pointA.position.distance(pointB.position);
     }
   }
-  update(delta: number) {
+  update() {
     const direction = this.pointA.position.copy().sub(this.pointB.position).normalize();
     if (direction.length > 0) {
       const d = (this.distance - this.pointA.position.distance(this.pointB.position)) / this.distance;
