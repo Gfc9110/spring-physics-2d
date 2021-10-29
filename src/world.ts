@@ -54,9 +54,9 @@ export class World {
     this.draggingPoint = null;
   }
   animationCallback(time: number) {
-    const deltaTime = 0.016;
     this.stats.ms(time - this.lastTime);
     fps.textContent = this.stats.fps.toFixed(2) + " FPS";
+    const deltaTime = this.stats.times.length == 50 ? 1 / this.stats.fps : 0.02;
     this.lastTime = time;
 
     this.draggingPoint?.addForce(this.mousePosition.copy().sub(this.draggingPoint.position).scale(0.1 * this.draggingPoint.mass));
