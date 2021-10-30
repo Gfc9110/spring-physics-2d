@@ -1,6 +1,6 @@
 import { Point } from "./point";
 import { Stats } from "./stats";
-import { SoftStructure, SoftCircle, Cord, BoundingBox } from "./structures";
+import { SoftStructure, SoftCircle, Cord, BoundingBox, SoftBox } from "./structures";
 import { Vector } from "./vector";
 
 const fps = document.querySelector("#fps");
@@ -28,12 +28,16 @@ export class World {
 
     //this.structures.push(new Cord(this, new Vector(this.canvas.width / 2 - 300, this.base - 600), new Vector(this.canvas.width / 2 + 300, this.base - 600), 60, true, true, 300));
     //this.structures.push(new SoftCircle(this, new Vector(this.canvas.width / 2 + 80, this.base - 200), 100, 3, 60000, true, 100));
-    this.structures.push(new SoftCircle(this, new Vector(this.canvas.width / 2 - 80, this.base - 200), 100, 4, 12000, true, 20));
-    for (let i = 0; i < 10; i++) {
-      this.structures.push(new SoftCircle(this, new Vector(this.canvas.width / 2, this.base - 1000 - (i * 200)), 40, 4, 2000, false, 1))
+    this.structures.push(new SoftCircle(this, new Vector(this.canvas.width / 2 - 80 + 200, this.base - 200), 100, 4, 90000, true, 100));
+    for (let i = 0; i < 50; i++) {
+      this.structures.push(new SoftCircle(this, new Vector(this.canvas.width / 2 + 200, this.base - 1000 - (i * 200)), 40, Math.floor(Math.random() * 4 + 3), 2000, false, 1))
     }
-    for (let i = 0; i < 7; i++) {
+    /*for (let i = 0; i < 7; i++) {
       this.structures.push(new SoftCircle(this, new Vector(this.canvas.width / 2 - 300 + Math.random(), this.bounds.position.y + this.bounds.size.y - 30 - (i * 55)), 40, 4, 200, false, 1).rotate(Math.PI / 4))
+    }*/
+    this.structures.push(new SoftBox(this, new Vector(this.canvas.width / 2 - 300 + Math.random() / 5, this.bounds.position.y + this.bounds.size.y - 175), new Vector(500, 50), 5000, true))
+    for (let i = 0; i < 15; i++) {
+      this.structures.push(new SoftBox(this, new Vector(this.canvas.width / 2 - 300 + Math.random() / 5, this.bounds.position.y + this.bounds.size.y - 200 - 25.2 - (50.2 * i)), new Vector(50, 50)))
     }
     //this.structures.push(new SoftCircle(this, new Vector(this.canvas.width / 2 + 200, this.base - 200), 100, 3, 600, false));
 
@@ -77,7 +81,7 @@ export class World {
     this.ctx.lineTo(this.bounds.position.x + this.bounds.size.x, this.bounds.position.y);
     this.ctx.stroke();
 
-    //this.structures[0].addTorque(-.5);
+    this.structures[0].addTorque(-.5);
     //this.structures[1].addTorque(.5);
 
     this.structures.forEach(s => s.update(deltaTime));

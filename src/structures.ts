@@ -64,12 +64,14 @@ export class SoftStructure {
     this.points.forEach(p => {
       if (p.position.x < minX) {
         minX = p.position.x;
-      } else if (p.position.x > maxX) {
+      }
+      if (p.position.x > maxX) {
         maxX = p.position.x;
       }
       if (p.position.y < minY) {
         minY = p.position.y;
-      } else if (p.position.y > maxY) {
+      }
+      if (p.position.y > maxY) {
         maxY = p.position.y;
       }
     })
@@ -120,5 +122,28 @@ export class Cord extends SoftStructure {
       }
       lastPoint = point;
     }
+  }
+}
+
+export class SoftBox extends SoftStructure {
+  constructor(world: World, center: Vector, size: Vector, stiffness = 500, fixed = false) {
+    super(world);
+    const topLeft = new Point(this, center.copy().add(new Vector(-size.x / 2, -size.y / 2)), 1, false, true);
+
+    const topRight = new Point(this, center.copy().add(new Vector(size.x / 2, -size.y / 2)), 1, false, true);
+
+    const bottomRight = new Point(this, center.copy().add(new Vector(size.x / 2, size.y / 2)), 1, fixed, true);
+
+    const bottomLeft = new Point(this, center.copy().add(new Vector(-size.x / 2, size.y / 2)), 1, fixed, true);
+
+    this.points.push(topLeft, topRight, bottomRight, bottomLeft);
+
+    this.springs.push(new Spring(bottomRight, bottomLeft, stiffness, null, true));
+    this.springs.push(new Spring(topRight, bottomRight, stiffness, null, true));
+    this.springs.push(new Spring(topLeft, topRight, stiffness, null, true));
+    this.springs.push(new Spring(bottomLeft, topLeft, stiffness, null, true));
+
+    this.springs.push(new Spring(bottomLeft, topRight, stiffness, null));
+    this.springs.push(new Spring(topLeft, bottomRight, stiffness, null));
   }
 }
