@@ -94,7 +94,7 @@ export class SoftCircle extends SoftStructure {
         this.springs.push(new Spring(point, lastPoint, stiffness, null, true))
       }
       if (i == sides - 1) {
-        this.springs.push(new Spring(point, firstPoint, stiffness, null, true))
+        this.springs.push(new Spring(firstPoint, point, stiffness, null, true))
       }
       lastPoint = point
     }

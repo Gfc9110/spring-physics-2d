@@ -62,4 +62,7 @@ export class Vector {
   projectOn(v: Vector) {
     return v.copy().scale(this.dot(v) / v.lengthSq);
   }
+  get angle() {
+    return Math.atan2(this.y, this.x);
+  }
 }

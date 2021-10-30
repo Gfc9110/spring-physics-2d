@@ -2,13 +2,15 @@ import { Spring } from "./spring";
 import { SoftStructure } from "./structures";
 import { Vector } from "./vector";
 
+//https://www.geeksforgeeks.org/check-if-two-given-line-segments-intersect/
+
 export class Segment {
-  static onSegment(a: Vector, b: Vector, c: Vector) {
-    return b.x <= Math.max(a.x, c.x) && b.x >= Math.min(a.x, c.x) &&
-      b.y <= Math.max(a.y, c.y) && b.y >= Math.min(a.y, c.y)
+  static onSegment(p: Vector, q: Vector, r: Vector) {
+    return q.x <= Math.max(p.x, r.x) && q.x >= Math.min(p.x, r.x) &&
+      q.y <= Math.max(p.y, r.y) && q.y >= Math.min(p.y, r.y)
   }
-  static orientation(a: Vector, b: Vector, c: Vector) {
-    let val = (b.y - a.y) * (c.x - b.x) - (b.x - a.x) * (c.y - b.y);
+  static orientation(p: Vector, q: Vector, r: Vector) {
+    let val = (q.y - p.y) * (r.x - q.x) - (q.x - p.x) * (r.y - q.y);
     if (val == 0) return 0;
     return val > 0 ? 1 : 2;
   }
@@ -27,32 +29,40 @@ export class Segment {
   }
   constructor(public a: Vector, public b: Vector) { }
   intersects(s: Segment) {
-    let o1 = Segment.orientation(this.a, this.b, s.a);
-    let o2 = Segment.orientation(this.a, this.b, s.b);
-    let o3 = Segment.orientation(s.a, s.b, this.a);
-    let o4 = Segment.orientation(s.a, s.b, this.b);
+    let p1 = this.a;
+    let q1 = this.b;
+    let p2 = s.a;
+    let q2 = s.b;
+
+    let o1 = Segment.orientation(p1, q1, p2);
+    let o2 = Segment.orientation(p1, q1, q2);
+    let o3 = Segment.orientation(p2, q2, p1);
+    let o4 = Segment.orientation(p2, q2, q1);
 
     if (o1 != o2 && o3 != o4) {
       return true;
     }
 
-    if (o1 == 0 && Segment.onSegment(this.a, s.a, this.b)) {
+    if (o1 == 0 && Segment.onSegment(p1, p2, q1)) {
       return true;
     }
 
-    if (o2 == 0 && Segment.onSegment(this.a, s.b, this.b)) {
+    if (o2 == 0 && Segment.onSegment(p1, q2, q1)) {
       return true;
     }
 
-    if (o3 == 0 && Segment.onSegment(s.a, this.a, s.b)) {
+    if (o3 == 0 && Segment.onSegment(p2, p1, q2)) {
       return true;
     }
 
-    if (o4 == 0 && Segment.onSegment(s.a, this.a, s.b)) {
+    if (o4 == 0 && Segment.onSegment(p2, q1, q2)) {
       return true;
     }
 
     return false;
+  }
+  get normal() {
+    return this.b.copy().sub(this.a).normalize().rotate(Math.PI / 2)
   }
 }
 
@@ -104,10 +114,10 @@ export class Point {
       let filter: Spring[] = [];
 
       if (this.isExternal) {
-        let intersectingSprings = this.structure.world.structures.filter(st => st != this.structure && st.boundingBox.intersects(this.structure.boundingBox)).map(st => {
+        let intersectingSprings = this.structure.world.structures.filter(st => st != this.structure && st.boundingBox.intersects(this.structure.boundingBox) && this.isInsideStructure(st)).map(st => {
           let intSprings = st.springs.filter(s => s.isSide && testSegments.some(ts => ts.intersects(s.segment)));
-          if (testSegments.every(ts => intSprings.find(s => ts.intersects(s.segment)))) {
-            return this.closestSpring(intSprings);
+          if (testSegments.every(ts => intSprings.find(s => ts.intersects(s.segment))) || this.findInside(st, [this]).length > 1) {
+            return this.closestSpring(intSprings, newPosition);
           }
           return null
         }).filter(s => !!s && !filter.find(s1 => s1 == s) && filter.push(s))
@@ -187,17 +197,34 @@ export class Point {
   neighborsSegments(position?: Vector, external = false) {
     return this.neighbors.filter(p => external ? p.isExternal : true).map(p => new Segment(p.position, position || this.position));
   }
-  closestSpring(springs: Spring[]) {
+  closestSpring(springs: Spring[], position?: Vector, inside = false) {
+    position = position || this.position;
     let minDistance = Infinity;
     let closestSpring: Spring;
     springs.forEach(s => {
-      let { projection } = new Segment(s.pointA.position, s.pointB.position).pointProjection(this.position);
-      let distance = projection.distance(this.position);
-      if (distance < minDistance) {
+      const seg = s.segment;
+      let { projection } = s.segment.pointProjection(position);
+      let distance = projection.distanceSq(position);
+      if (distance < minDistance && (inside ? this.isInsideSegment(seg, position) : true)) {
         minDistance = distance;
         closestSpring = s;
       }
     });
     return closestSpring;
+  }
+  isInsideSegment(s: Segment, position?: Vector) {
+    position = position || this.position;
+    let { projection } = s.pointProjection(position);
+    return Math.round(s.normal.angle * 100) == Math.round(projection.sub(position).angle * 100) && projection.lengthSq > 1;
+  }
+  isInsideStructure(s: SoftStructure, position?: Vector) {
+    let testSegment = new Segment(position || this.position, s.center.add(s.boundingBox.size));
+    return s.springs.filter(sp => sp.isSide && sp.segment.intersects(testSegment)).length % 2 == 1;
+  }
+  findInside(s: SoftStructure, found: Point[]) {
+    let ns = this.neighbors.filter(n => n.isExternal && s.springs.every(s => !new Segment(this.position, n.position).intersects(s.segment)) && !found.find(n1 => n == n1) && n.isInsideStructure(s));
+    found.push(...ns);
+    ns.forEach(n => n.findInside(s, found));
+    return found;
   }
 }
