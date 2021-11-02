@@ -15,16 +15,19 @@ export class Segment {
     return val > 0 ? 1 : 2;
   }
   pointProjection(v: Vector) {
+    let inside = false;
     let l2 = this.a.distanceSq(this.b);
 
     if (l2 == 0) return { t: 0, projection: this.a };
 
     let t = ((v.x - this.a.x) * (this.b.x - this.a.x) + (v.y - this.a.y) * (this.b.y - this.a.y)) / l2;
 
+    inside = t >= 0 && t <= 1;
+
     Math.max(0, Math.min(1, t));
 
     let projection = new Vector(this.a.x + t * (this.b.x - this.a.x), this.a.y + t * (this.b.y - this.a.y));
-    return { projection, t }
+    return { projection, t, inside }
 
   }
   constructor(public a: Vector, public b: Vector) { }
@@ -214,8 +217,8 @@ export class Point {
   }
   isInsideSegment(s: Segment, position?: Vector) {
     position = position || this.position;
-    let { projection } = s.pointProjection(position);
-    return Math.round(s.normal.angle * 100) == Math.round(projection.sub(position).angle * 100) && projection.lengthSq > 1;
+    let { projection, inside } = s.pointProjection(position);
+    return inside && Math.round(s.normal.angle * 100) == Math.round(projection.sub(position).angle * 100) && projection.lengthSq > 0;
   }
   isInsideStructure(s: SoftStructure, position?: Vector) {
     let testSegment = new Segment(position || this.position, s.center.add(s.boundingBox.size));

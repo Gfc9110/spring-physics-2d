@@ -30,7 +30,7 @@ export class World {
     //this.structures.push(new SoftCircle(this, new Vector(this.canvas.width / 2 + 80, this.base - 200), 100, 3, 60000, true, 100));
     this.structures.push(new SoftCircle(this, new Vector(this.canvas.width / 2 - 80 + 200, this.base - 200), 100, 4, 90000, true, 100));
     for (let i = 0; i < 50; i++) {
-      this.structures.push(new SoftCircle(this, new Vector(this.canvas.width / 2 + 200, this.base - 1000 - (i * 200)), 40, Math.floor(Math.random() * 4 + 3), 2000, false, 1))
+      this.structures.push(new SoftCircle(this, new Vector(this.canvas.width / 2 + 200, this.base - 1000 - (i * 200)), 40 + Math.random() * 40, 3, 2000, false, 1))
     }
     /*for (let i = 0; i < 7; i++) {
       this.structures.push(new SoftCircle(this, new Vector(this.canvas.width / 2 - 300 + Math.random(), this.bounds.position.y + this.bounds.size.y - 30 - (i * 55)), 40, 4, 200, false, 1).rotate(Math.PI / 4))
