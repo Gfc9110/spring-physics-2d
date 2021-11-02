@@ -110,17 +110,37 @@ export class SoftCircle extends SoftStructure {
 }
 
 export class Cord extends SoftStructure {
-  constructor(world: World, startPosition: Vector, endPosition: Vector, steps: number = 30, firstFixed = false, lastFixed = false, tension = 5) {
+  constructor(world: World, startPosition: Vector, endPosition: Vector, steps: number = 30, startFixed = false, endFixed = false, tension = 5, width = 5) {
     super(world);
     const step = endPosition.copy().sub(startPosition).scale(1 / steps)
-    let lastPoint: Point;
-    for (let i = 0; i < steps; i++) {
-      const point = new Point(this, startPosition.add(step).copy(), 1, (i == 0 && firstFixed) || (i == steps - 1) && lastFixed);
-      this.points.push(point);
-      if (lastPoint) {
-        this.springs.push(new Spring(point, lastPoint, tension, null, true));
+    const startPoint = new Point(this, startPosition.copy(), 1, startFixed, true);
+    const endPoint = new Point(this, endPosition, 1, endFixed, true);
+    this.points.push(startPoint, endPoint);
+    const up = step.copy().rotate(Math.PI / 2).normalize().scale(width / 2);
+    let lastUpPoint = startPoint;
+    let lastDownPoint = startPoint;
+    for (let i = 1; i < steps; i++) {
+      const upPoint = new Point(this, startPosition.add(step).copy().add(up), 1, false, true);
+      const downPoint = new Point(this, startPosition.copy().sub(up), 1, false, true);
+
+      this.springs.push(new Spring(lastUpPoint, upPoint, tension, null, true, tension / 100))
+      this.springs.push(new Spring(downPoint, lastDownPoint, tension, null, true, tension / 100))
+      this.springs.push(new Spring(downPoint, upPoint, tension, null, false, tension / 100))
+
+      if (i > 1) {
+        this.springs.push(new Spring(downPoint, lastUpPoint, tension, null, false, tension / 100))
+        this.springs.push(new Spring(upPoint, lastDownPoint, tension, null, false, tension / 100))
       }
-      lastPoint = point;
+
+      if (i == steps - 1) {
+        this.springs.push(new Spring(upPoint, endPoint, tension, null, true, tension / 100))
+        this.springs.push(new Spring(endPoint, downPoint, tension, null, true, tension / 100))
+      }
+
+      this.points.push(upPoint, downPoint);
+
+      lastUpPoint = upPoint;
+      lastDownPoint = downPoint;
     }
   }
 }
