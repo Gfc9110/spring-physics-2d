@@ -29,14 +29,14 @@ export class World {
     //this.structures.push(new Cord(this, new Vector(this.canvas.width / 2 - 300, this.base - 600), new Vector(this.canvas.width / 2 + 300, this.base - 600), 60, true, true, 300));
     //this.structures.push(new SoftCircle(this, new Vector(this.canvas.width / 2 + 80, this.base - 200), 100, 3, 60000, true, 100));
     this.structures.push(new SoftCircle(this, new Vector(this.canvas.width / 2 - 80 + 200, this.base - 200), 100, 4, 90000, true, 100));
-    for (let i = 0; i < 50; i++) {
+    for (let i = 0; i < 1; i++) {
       this.structures.push(new SoftCircle(this, new Vector(this.canvas.width / 2 + 200, this.base - 1000 - (i * 200)), 40 + Math.random() * 40, 3, 2000, false, 1))
     }
     /*for (let i = 0; i < 7; i++) {
       this.structures.push(new SoftCircle(this, new Vector(this.canvas.width / 2 - 300 + Math.random(), this.bounds.position.y + this.bounds.size.y - 30 - (i * 55)), 40, 4, 200, false, 1).rotate(Math.PI / 4))
     }*/
     this.structures.push(new SoftBox(this, new Vector(this.canvas.width / 2 - 300 + Math.random() / 5, this.bounds.position.y + this.bounds.size.y - 175), new Vector(500, 50), 5000, true))
-    for (let i = 0; i < 15; i++) {
+    for (let i = 0; i < 1; i++) {
       this.structures.push(new SoftBox(this, new Vector(this.canvas.width / 2 - 300 + Math.random() / 5, this.bounds.position.y + this.bounds.size.y - 200 - 25.2 - (50.2 * i)), new Vector(50, 50)))
     }
     //this.structures.push(new SoftCircle(this, new Vector(this.canvas.width / 2 + 200, this.base - 200), 100, 3, 600, false));
@@ -63,7 +63,7 @@ export class World {
   animationCallback(time: number) {
     this.stats.ms(time - this.lastTime);
     fps.textContent = this.stats.fps.toFixed(2) + " FPS";
-    const deltaTime = this.stats.times.length == 50 ? 1 / this.stats.fps : 0.02;
+    const deltaTime = this.stats.times.length == 1000 ? 1 / this.stats.fps : 0.02;
     this.lastTime = time;
 
     this.draggingPoint?.addForce(this.mousePosition.copy().sub(this.draggingPoint.position).scale(0.1 * this.draggingPoint.mass));

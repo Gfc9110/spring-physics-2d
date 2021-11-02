@@ -153,8 +153,10 @@ export class Point {
 
           const springVelocityDifferenceAtImpact = finalSpringVelocityAtImpact.copy().sub(springVelocityAtImpact);
 
-          is.pointA.velocity.add(springVelocityDifferenceAtImpact.copy().scale(momentB / totalMoment));
-          is.pointB.velocity.add(springVelocityDifferenceAtImpact.copy().scale(momentA / totalMoment));
+          if (!is.pointA.isFixed)
+            is.pointA.velocity.add(springVelocityDifferenceAtImpact.copy().scale(momentB / totalMoment));
+          if (!is.pointB.isFixed)
+            is.pointB.velocity.add(springVelocityDifferenceAtImpact.copy().scale(momentA / totalMoment));
 
           this.velocity = tangentVelocity.add(finalNormalVelocity);
           newPosition = projection;
@@ -186,6 +188,8 @@ export class Point {
       }
 
       this.acceleration = new Vector();
+    } else {
+      this.velocity = new Vector();
     }
   }
   rotateAround(angle: number, around: Vector) {

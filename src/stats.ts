@@ -3,7 +3,7 @@ export class Stats {
   constructor() { }
   ms(ms: number) {
     this.times.push(ms);
-    if (this.times.length > 50) {
+    if (this.times.length > 1000) {
       this.times.splice(0, 1);
     }
   }

@@ -1,7 +1,7 @@
 import { Point, Segment } from "./point";
 
 export class Spring {
-  constructor(public pointA: Point, public pointB: Point, public constant = 200, public distance?: number, public isSide = false) {
+  constructor(public pointA: Point, public pointB: Point, public constant = 200, public distance?: number, public isSide = false, public damping = 2) {
     if (!distance) {
       this.distance = pointA.position.distance(pointB.position);
     }
@@ -9,9 +9,10 @@ export class Spring {
   update() {
     const direction = this.pointA.position.copy().sub(this.pointB.position).normalize();
     if (direction.length > 0) {
+      const dampingForce = this.segment.pointProjection(this.pointA.velocity.copy().sub(this.pointB.velocity).scale(this.damping).add(this.center)).projection.sub(this.center);
       const d = (this.distance - this.pointA.position.distance(this.pointB.position)) / this.distance;
-      const forceVal = /*Math.abs(Math.sin(Math.min(Math.max(d * (Math.PI / 2), -Math.PI / 2), Math.PI / 2))) * */this.constant * d;
-      direction.scale(forceVal);
+      const forceVal = /*Math.abs(Math.sin(Math.min(Math.max(d * (Math.PI / 2), -Math.PI / 2), Math.PI / 2))) * */this.constant * d
+      direction.scale(forceVal).sub(dampingForce);
       this.pointA.addForce(direction);
       this.pointB.addForce(direction.scale(-1));
     }
@@ -29,5 +30,8 @@ export class Spring {
   }
   get segment() {
     return new Segment(this.pointA.position, this.pointB.position)
+  }
+  get center() {
+    return this.pointA.position.copy().add(this.pointB.position).scale(0.5);
   }
 }
