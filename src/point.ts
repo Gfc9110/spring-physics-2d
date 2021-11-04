@@ -109,86 +109,98 @@ export class Point {
       this.velocity.add(this.acceleration.scale(delta));
 
       this.velocity.scale(0.999);
+    }
 
-      let newPosition = this.position.copy().add(this.velocity);
+    let newPosition = this.position.copy().add(this.velocity);
 
-      let testSegments = this.neighborsSegments(newPosition, true);
+    let testSegments = this.neighborsSegments(newPosition, true);
 
-      let filter: Spring[] = [];
+    let filter: Spring[] = [];
 
-      if (this.isExternal) {
-        let intersectingSprings = this.structure.world.structures.filter(st => st != this.structure && st.boundingBox.intersects(this.structure.boundingBox) && this.isInsideStructure(st)).map(st => {
-          let intSprings = st.springs.filter(s => s.isSide && testSegments.some(ts => ts.intersects(s.segment)));
-          if (testSegments.every(ts => intSprings.find(s => ts.intersects(s.segment))) || this.findInside(st, [this]).length > 1) {
-            return this.closestSpring(intSprings, newPosition);
-          }
-          return null
-        }).filter(s => !!s && !filter.find(s1 => s1 == s) && filter.push(s))
+    if (this.isExternal) {
+      let intersectingSprings = this.structure.world.structures.filter(st => st != this.structure && st.boundingBox.intersects(this.structure.boundingBox) && this.isInsideStructure(st)).map(st => {
+        let intSprings = st.springs.filter(s => s.isSide && testSegments.some(ts => ts.intersects(s.segment)));
+        if (testSegments.every(ts => intSprings.find(s => ts.intersects(s.segment))) || this.findInside(st, [this]).length > 1) {
+          return this.closestSpring(intSprings, newPosition);
+        }
+        return null
+      }).filter(s => !!s && !filter.find(s1 => s1 == s) && filter.push(s))
 
-        intersectingSprings.forEach(is => {
-          let { projection, t } = is.segment.pointProjection(newPosition)
+      intersectingSprings.forEach(is => {
+        let { projection, t } = is.segment.pointProjection(newPosition)
 
-          const radiusA = projection.distance(is.pointA.position);
-          const radiusB = projection.distance(is.pointB.position);
+        const radiusA = projection.distance(is.pointA.position);
+        const radiusB = projection.distance(is.pointB.position);
 
-          const momentA = radiusA * is.pointA.mass;
-          const momentB = radiusB * is.pointB.mass;
-          const totalMoment = momentA + momentB;
+        const momentA = radiusA * is.pointA.mass;
+        const momentB = radiusB * is.pointB.mass;
+        const totalMoment = momentA + momentB;
 
-          const springVelocityAtImpact = is.pointA.velocity.copy().scale(1 - t).add(is.pointB.velocity.copy().scale(t));
-          const springMassAtImpact = is.pointA.mass * (1 - t) + is.pointB.mass * t;
+        const springVelocityAtImpact = is.pointA.velocity.copy().scale(1 - t).add(is.pointB.velocity.copy().scale(t));
+        const springMassAtImpact = is.pointA.mass * (1 - t) + is.pointB.mass * t;
 
-          const springTangentVelocityAtImpact = springVelocityAtImpact.projectOn(is.pointA.position.copy().sub(is.pointB.position));
-          const tangentVelocity = this.velocity.projectOn(is.pointA.position.copy().sub(is.pointB.position));
+        const springTangentVelocityAtImpact = springVelocityAtImpact.projectOn(is.pointA.position.copy().sub(is.pointB.position));
+        const tangentVelocity = this.velocity.projectOn(is.pointA.position.copy().sub(is.pointB.position));
 
-          const springNormalVelocityAtImpact = springVelocityAtImpact.copy().sub(springTangentVelocityAtImpact);
-          const normalVelocity = this.velocity.copy().sub(tangentVelocity);
+        const springNormalVelocityAtImpact = springVelocityAtImpact.copy().sub(springTangentVelocityAtImpact);
+        const normalVelocity = this.velocity.copy().sub(tangentVelocity);
 
-          springTangentVelocityAtImpact.scale(0.7);
-          tangentVelocity.scale(0.7);
+        springTangentVelocityAtImpact.scale(0.9);
+        tangentVelocity.scale(0.9);
 
-          const finalNormalVelocity = springNormalVelocityAtImpact.copy().scale(springMassAtImpact).add(normalVelocity.copy().scale(this.mass)).scale(1 / (this.mass + springMassAtImpact));
+        const finalNormalVelocity = springNormalVelocityAtImpact.copy().scale(springMassAtImpact).add(normalVelocity.copy().scale(this.mass)).scale(1 / (this.mass + springMassAtImpact)).scale(this.isFixed ? 0 : 1);
 
-          const finalSpringVelocityAtImpact = finalNormalVelocity.copy().add(springTangentVelocityAtImpact);
+        const finalSpringVelocityAtImpact = finalNormalVelocity.copy().add(springTangentVelocityAtImpact);
 
-          const springVelocityDifferenceAtImpact = finalSpringVelocityAtImpact.copy().sub(springVelocityAtImpact);
+        const springVelocityDifferenceAtImpact = finalSpringVelocityAtImpact.copy().sub(springVelocityAtImpact);
 
-          if (!is.pointA.isFixed)
-            is.pointA.velocity.add(springVelocityDifferenceAtImpact.copy().scale(momentB / totalMoment));
-          if (!is.pointB.isFixed)
-            is.pointB.velocity.add(springVelocityDifferenceAtImpact.copy().scale(momentA / totalMoment));
+        if (!is.pointA.isFixed)
+          is.pointA.velocity.add(springVelocityDifferenceAtImpact.copy().scale(momentB / totalMoment));
+        if (!is.pointB.isFixed)
+          is.pointB.velocity.add(springVelocityDifferenceAtImpact.copy().scale(momentA / totalMoment));
 
+        if (!this.isFixed) {
           this.velocity = tangentVelocity.add(finalNormalVelocity);
-          newPosition = projection;
-        });
-      }
+        }
+        newPosition = projection;
 
+        if (this.isFixed) {
+          const positionDifference = this.position.copy().sub(newPosition);
+          if (!is.pointA.isFixed)
+            is.pointA.position.add(positionDifference.copy().scale(momentB / totalMoment));
+          if (!is.pointB.isFixed)
+            is.pointB.position.add(positionDifference.copy().scale(momentA / totalMoment));
+        }
+      });
+    }
+    if (!this.isFixed) {
       this.position = newPosition;
+    }
 
-      let bounds = this.structure.world.bounds;
+    let bounds = this.structure.world.bounds;
 
-      if (this.position.x < bounds.position.x) {
-        this.position.x = bounds.position.x;
-        this.velocity.x = 0;
-        this.velocity.scale(0.7);
-      } else if (this.position.x > bounds.position.x + bounds.size.x) {
-        this.position.x = bounds.position.x + bounds.size.x;
-        this.velocity.x = 0;
-        this.velocity.scale(0.7);
-      }
+    if (this.position.x < bounds.position.x) {
+      this.position.x = bounds.position.x;
+      this.velocity.x = 0;
+      this.velocity.scale(0.9);
+    } else if (this.position.x > bounds.position.x + bounds.size.x) {
+      this.position.x = bounds.position.x + bounds.size.x;
+      this.velocity.x = 0;
+      this.velocity.scale(0.9);
+    }
 
-      if (this.position.y < bounds.position.y) {
-        //this.position.y = bounds.position.y;
-        //this.velocity.y = 0;
-        //this.velocity.scale(0.7);
-      } else if (this.position.y > bounds.position.y + bounds.size.y) {
-        this.position.y = bounds.position.y + bounds.size.y;
-        this.velocity.y = 0;
-        this.velocity.scale(0.7);
-      }
+    if (this.position.y < bounds.position.y) {
+      //this.position.y = bounds.position.y;
+      //this.velocity.y = 0;
+      //this.velocity.scale(0.7);
+    } else if (this.position.y > bounds.position.y + bounds.size.y) {
+      this.position.y = bounds.position.y + bounds.size.y;
+      this.velocity.y = 0;
+      this.velocity.scale(0.9);
+    }
 
-      this.acceleration = new Vector();
-    } else {
+    this.acceleration = new Vector();
+    if (this.isFixed) {
       this.velocity = new Vector();
     }
   }

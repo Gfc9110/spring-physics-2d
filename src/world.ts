@@ -43,7 +43,7 @@ export class World {
       this.structures.push(new JumpingBox(this, new Vector(this.canvas.width * (i + 1) / 6, this.bounds.position.y - 100), new Vector(50, 50)).rotate(Math.random() * Math.PI * 2));
     }*/
 
-    this.structures.push(new JumpingBox(this, new Vector(this.canvas.width / 4, this.bounds.position.y + this.bounds.size.y / 2), new Vector(50, 50), 600));
+    this.structures.push(new JumpingBox(this, new Vector(this.canvas.width / 4, this.bounds.position.y + this.bounds.size.y / 2), new Vector(50, 50), 500, false, 1));
 
     document.body.addEventListener("mousedown", this.handleMousedown.bind(this));
     document.body.addEventListener("mousemove", this.handleMousemove.bind(this));

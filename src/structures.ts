@@ -170,16 +170,16 @@ export class Cord extends SoftStructure {
 
 export class SoftBox extends SoftStructure {
   size: Vector;
-  constructor(world: World, center: Vector, size: Vector, stiffness = 500, fixed = false) {
+  constructor(world: World, center: Vector, size: Vector, stiffness = 500, fixed = false, mass = 1) {
     super(world);
     this.size = size;
-    const topLeft = new Point(this, center.copy().add(new Vector(-size.x / 2, -size.y / 2)), 1, false, true);
+    const topLeft = new Point(this, center.copy().add(new Vector(-size.x / 2, -size.y / 2)), mass, fixed, true);
 
-    const topRight = new Point(this, center.copy().add(new Vector(size.x / 2, -size.y / 2)), 1, false, true);
+    const topRight = new Point(this, center.copy().add(new Vector(size.x / 2, -size.y / 2)), mass, fixed, true);
 
-    const bottomRight = new Point(this, center.copy().add(new Vector(size.x / 2, size.y / 2)), 1, fixed, true);
+    const bottomRight = new Point(this, center.copy().add(new Vector(size.x / 2, size.y / 2)), mass, fixed, true);
 
-    const bottomLeft = new Point(this, center.copy().add(new Vector(-size.x / 2, size.y / 2)), 1, fixed, true);
+    const bottomLeft = new Point(this, center.copy().add(new Vector(-size.x / 2, size.y / 2)), mass, fixed, true);
 
     this.points.push(topLeft, topRight, bottomRight, bottomLeft);
 
@@ -194,8 +194,8 @@ export class SoftBox extends SoftStructure {
 }
 
 export class JumpingBox extends SoftBox {
-  constructor(world: World, center: Vector, size: Vector, stiffness = 500, fixed = false) {
-    super(world, center, size, stiffness, fixed);
+  constructor(world: World, center: Vector, size: Vector, stiffness = 500, fixed = false, mass = 1) {
+    super(world, center, size, stiffness, fixed, mass);
     this.strokeStyle = "#0000";
   }
   update(delta: number) {
