@@ -1,7 +1,7 @@
 import { Inputs } from "./inputs";
 import { Point } from "./point";
 import { Stats } from "./stats";
-import { SoftStructure, SoftCircle, Cord, BoundingBox, SoftBox, JumpingBox } from "./structures";
+import { SoftStructure, SoftCircle, Cord, BoundingBox, SoftBox, JumpingBox, OpenDonut } from "./structures";
 import { Vector } from "./vector";
 
 const fps = document.querySelector("#fps");
@@ -44,6 +44,9 @@ export class World {
     }*/
 
     this.structures.push(new JumpingBox(this, new Vector(this.canvas.width / 4, this.bounds.position.y + this.bounds.size.y / 2), new Vector(50, 50), 500, false, 1));
+
+    this.structures.push(new OpenDonut(this, new Vector((this.canvas.width * 3 / 4) - 200, this.bounds.position.y + this.bounds.size.y - 200), 60, 150, 16));
+    this.structures.push(new OpenDonut(this, new Vector((this.canvas.width * 3 / 4) + 200, this.bounds.position.y + this.bounds.size.y - 200), 60, 150, 16).rotate(Math.PI));
 
     document.body.addEventListener("mousedown", this.handleMousedown.bind(this));
     document.body.addEventListener("mousemove", this.handleMousemove.bind(this));

@@ -205,3 +205,41 @@ export class JumpingBox extends SoftBox {
     super.update(delta);
   }
 }
+
+export class OpenDonut extends SoftStructure {
+  constructor(world: World, center: Vector, r: number = 80, R: number = 100, sides = 10) {
+    super(world);
+    const angle = Math.PI * 2 / (sides + 2);
+    let temp = new Vector(r, 0);
+    let internalPoints: Point[] = [];
+    for (let i = 0; i < sides; i++) {
+      this.points.push(internalPoints[i] = new Point(this, center.copy().add(temp.rotate(angle)), 1, false, true));
+      if (i > 0) {
+        this.springs.push(new Spring(internalPoints[i - 1], internalPoints[i], 1000, null, true));
+      }
+      if (i == sides - 1) {
+        this.springs.push(new Spring(internalPoints[0], internalPoints[i], 1000, null, false));
+      }
+    }
+    let externalPoints: Point[] = [];
+    temp.scale(R / r);
+    for (let i = 0; i < sides; i++) {
+      this.points.push(externalPoints[i] = new Point(this, center.copy().add(temp), 1, false, true));
+      temp.rotate(-angle)
+      const isExt = i == 0 || i == sides - 1;
+      this.springs.push(new Spring(externalPoints[i], internalPoints[sides - i - 1], 1000, null, isExt));
+      if (!isExt) {
+        this.springs.push(new Spring(externalPoints[i], internalPoints[sides - i - 2], 1000, null, isExt));
+        this.springs.push(new Spring(externalPoints[i], internalPoints[sides - i], 1000, null, isExt));
+      }
+      if (i > 0) {
+        this.springs.push(new Spring(externalPoints[i - 1], externalPoints[i], 1000, null, true));
+      }
+      if (i == sides - 1) {
+        this.springs.push(new Spring(externalPoints[0], externalPoints[i], 1000, null, false));
+        this.springs.push(new Spring(externalPoints[0], internalPoints[0], 1000, null, false));
+        this.springs.push(new Spring(externalPoints[i], internalPoints[i], 1000, null, false));
+      }
+    }
+  }
+}
