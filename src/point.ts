@@ -84,14 +84,14 @@ export class Point {
     if (this.isFixed) {
       ctx.fillStyle = "#00f";
     }
-    ctx.strokeStyle = "#0000";
+    /*ctx.strokeStyle = "#0000";
     ctx.beginPath();
     ctx.arc(this.position.x, this.position.y, this.isFixed ? 4 : 2, 0, Math.PI * 2);
-    ctx.fill();
+    ctx.fill();*/
 
     if (this.structure.world.draggingPoint == this) {
-      ctx.strokeStyle = "#000";
-      ctx.lineWidth = 1;
+      ctx.strokeStyle = "#66f";
+      ctx.lineWidth = 2;
       ctx.beginPath();
       ctx.moveTo(this.position.x, this.position.y);
       ctx.lineTo(this.structure.world.mousePosition.x, this.structure.world.mousePosition.y);

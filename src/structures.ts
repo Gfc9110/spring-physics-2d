@@ -1,7 +1,7 @@
 import { mousePickDistancesq } from "./constants";
 import { Point } from "./point";
 import { Spring } from "./spring";
-import { Vector } from "./vector";
+import { lerpColor, Vector } from "./vector";
 import { World } from "./world";
 
 export class BoundingBox {
@@ -12,6 +12,8 @@ export class BoundingBox {
   }
 }
 export class SoftStructure {
+  random: number;
+  gravityScale: number = 1;
   testPoint(position: Vector, maxDistanceSq: number = mousePickDistancesq) {
     for (let i = 0; i < this.points.length; i++) {
       if (this.points[i].testPoint(position, maxDistanceSq)) return this.points[i];
@@ -19,18 +21,29 @@ export class SoftStructure {
   }
   springs: Spring[] = [];
   points: Point[] = [];
-  constructor(public world: World) { }
+  constructor(public world: World, public fillStyle = "#999f", public strokeStyle = "#000f") {
+    this.random = Math.random();
+  }
   update(delta: number) {
     this.points.forEach(p => p.addForce(this.world.gravity.copy().scale(p.mass)));
-    this.springs.forEach(s => s.update());
+    this.springs.forEach(s => s.update(delta));
     this.points.forEach(p => p.update(delta, this.world.base));
   }
+  drawOutline(ctx: CanvasRenderingContext2D) {
+    const outline = this.outline;
+    ctx.lineWidth = 1;
+    ctx.fillStyle = this.fillStyle;
+    ctx.strokeStyle = this.strokeStyle;
+    ctx.beginPath();
+    ctx.moveTo(outline[0].x, outline[0].y);
+    outline.forEach((v, i) => {
+      i == 0 ? ctx.moveTo(v.x, v.y) : ctx.lineTo(v.x, v.y)
+    })
+    ctx.closePath();
+    ctx.fill();
+    ctx.stroke();
+  }
   draw(ctx: CanvasRenderingContext2D) {
-    let bb = this.boundingBox;
-    ctx.strokeStyle = "#0002";
-    this.world.structures.filter(s => s != this && s.boundingBox.intersects(bb)).forEach(_ => ctx.strokeStyle = "#f002");
-    ctx.strokeRect(bb.position.x, bb.position.y, bb.size.x, bb.size.y)
-    this.springs.forEach(s => s.draw(ctx));
     this.points.forEach(p => p.draw(ctx));
   }
   rotate(angle: number) {
@@ -77,6 +90,15 @@ export class SoftStructure {
     })
     return new BoundingBox(new Vector(minX, minY), new Vector(maxX - minX, maxY - minY));
   }
+  get outline() {
+    let outlinePoints: Point[] = [];
+    let currentPoint = this.points.find((p) => p.isExternal);
+    while (currentPoint) {
+      outlinePoints.push(currentPoint);
+      currentPoint = currentPoint.neighbors.find(n => n.isExternal && !outlinePoints.find(op => op == n) && this.springs.find(s => s.isSide && (s.pointA == currentPoint && s.pointB == n) || (s.pointB == currentPoint && s.pointA == n)));
+    }
+    return outlinePoints.map(p => p.position);
+  }
 }
 
 export class SoftCircle extends SoftStructure {
@@ -100,6 +122,7 @@ export class SoftCircle extends SoftStructure {
       }
       lastPoint = point
     }
+    console.log(this.outline);
   }
   update(delta: number) {
     //this.centerPoint.addForce(new Vector(1, 0))
@@ -115,7 +138,7 @@ export class Cord extends SoftStructure {
     const step = endPosition.copy().sub(startPosition).scale(1 / steps)
     const startPoint = new Point(this, startPosition.copy(), 1, startFixed, true);
     const endPoint = new Point(this, endPosition, 1, endFixed, true);
-    this.points.push(startPoint, endPoint);
+    this.points.push(endPoint, startPoint);
     const up = step.copy().rotate(Math.PI / 2).normalize().scale(width / 2);
     let lastUpPoint = startPoint;
     let lastDownPoint = startPoint;
@@ -146,8 +169,10 @@ export class Cord extends SoftStructure {
 }
 
 export class SoftBox extends SoftStructure {
+  size: Vector;
   constructor(world: World, center: Vector, size: Vector, stiffness = 500, fixed = false) {
     super(world);
+    this.size = size;
     const topLeft = new Point(this, center.copy().add(new Vector(-size.x / 2, -size.y / 2)), 1, false, true);
 
     const topRight = new Point(this, center.copy().add(new Vector(size.x / 2, -size.y / 2)), 1, false, true);
@@ -165,5 +190,18 @@ export class SoftBox extends SoftStructure {
 
     this.springs.push(new Spring(bottomLeft, topRight, stiffness, null));
     this.springs.push(new Spring(topLeft, bottomRight, stiffness, null));
+  }
+}
+
+export class JumpingBox extends SoftBox {
+  constructor(world: World, center: Vector, size: Vector, stiffness = 500, fixed = false) {
+    super(world, center, size, stiffness, fixed);
+    this.strokeStyle = "#0000";
+  }
+  update(delta: number) {
+    this.springs[1].target = this.world.inputs.get("KeyS") ? this.size.y / 3 : this.size.y * 3;
+    this.springs[3].target = this.world.inputs.get("KeyS") ? this.size.y / 3 : this.size.y * 3;
+    this.fillStyle = lerpColor("#ff6644", "#55ccs55", Math.pow((this.springs[1].distance - this.size.y / 3) / (this.size.y * 3 - this.size.y / 3), 2));
+    super.update(delta);
   }
 }
