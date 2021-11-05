@@ -1,5 +1,6 @@
 import { Inputs } from "./inputs";
 import { Point } from "./point";
+import { ShapeCreator } from "./shapeCreator";
 import { Stats } from "./stats";
 import { SoftStructure, SoftCircle, Cord, BoundingBox, SoftBox, JumpingBox, OpenDonut } from "./structures";
 import { Vector } from "./vector";
@@ -18,8 +19,12 @@ export class World {
   stats: Stats = new Stats();
   time: number = 0;
   inputs: Inputs;
+  cameraPosition: Vector;
+  draggingCamera: boolean = false;
+  shapeCreator: ShapeCreator;
   constructor() {
     this.canvas = document.createElement("canvas");
+    this.cameraPosition = new Vector(0, 0);
     this.canvas.width = window.innerWidth;
     this.canvas.height = window.innerHeight;
     document.body.appendChild(this.canvas);
@@ -28,7 +33,7 @@ export class World {
     window.requestAnimationFrame(this.animationCallback.bind(this));
     this.gravity = new Vector(0, .8);
     this.base = window.innerHeight - 100;
-    this.bounds = new BoundingBox(new Vector(20, 20), new Vector(window.innerWidth - 40, window.innerHeight - 40));
+    this.bounds = new BoundingBox(new Vector(-5000, 20), new Vector(window.innerWidth + 10000, window.innerHeight - 40));
 
     this.structures.push(new Cord(this, new Vector(this.canvas.width / 2 - 300, this.base - 600), new Vector(this.canvas.width / 2 + 300, this.base - 600), 30, true, true, 200, 15));
     this.structures.push(new SoftCircle(this, new Vector(this.canvas.width / 2 - 80 + 200, this.base - 200), 100, 4, 90000, true, 100));
@@ -50,22 +55,51 @@ export class World {
 
     document.body.addEventListener("mousedown", this.handleMousedown.bind(this));
     document.body.addEventListener("mousemove", this.handleMousemove.bind(this));
+    document.body.addEventListener("contextmenu", (event) => event.preventDefault());
     window.addEventListener("mouseup", this.handleMouseup.bind(this));
   }
   handleMousedown(event: MouseEvent) {
-    this.mousePosition = new Vector(event.clientX, event.clientY);
-    let point: Point;
-    for (let i = 0; i < this.structures.length; i++) {
-      if (point = this.structures[i].testPoint(this.mousePosition)) break;
+    event.preventDefault();
+    console.log(event.button);
+    this.mousePosition = new Vector(event.clientX, event.clientY).sub(this.cameraPosition);
+    if (event.button == 0) {
+      let point: Point;
+      for (let i = 0; i < this.structures.length; i++) {
+        if (point = this.structures[i].testPoint(this.mousePosition)) break;
+      }
+      this.draggingPoint = point;
+    } else if (event.button == 1) {
+      this.draggingCamera = true;
+    } else if (event.button == 2) {
+      this.shapeCreator = new ShapeCreator(this);
+      this.shapeCreator.next(this.mousePosition);
     }
-    this.draggingPoint = point;
   }
   handleMousemove(event: MouseEvent) {
-    this.mousePosition = new Vector(event.clientX, event.clientY);
+    event.preventDefault();
+    //if (event.button == 0) {
+    //} else if (event.button == 1) {
+    if (this.draggingCamera) {
+      this.cameraPosition.add(new Vector(event.movementX, event.movementY));
+    }
+
+    this.mousePosition = new Vector(event.clientX, event.clientY).sub(this.cameraPosition);
+
+    if (this.shapeCreator) {
+      this.shapeCreator.next(this.mousePosition);
+    }
+    //}
   }
   handleMouseup(event: MouseEvent) {
-    this.mousePosition = new Vector(event.clientX, event.clientY);
-    this.draggingPoint = null;
+    event.preventDefault();
+    this.mousePosition = new Vector(event.clientX, event.clientY).sub(this.cameraPosition);
+    if (event.button == 0) {
+      this.draggingPoint = null;
+    } else if (event.button == 1) {
+      this.draggingCamera = false;
+    } else if (event.button == 2) {
+      this.shapeCreator.end(this.mousePosition);
+    }
   }
   animationCallback(time: number) {
     this.stats.ms(time - this.lastTime);
@@ -77,7 +111,11 @@ export class World {
 
     this.ctx.fillStyle = "#fff8";
     this.ctx.strokeStyle = "#fff0";
+    this.ctx.resetTransform();
     this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
+    this.ctx.transform(1, 0, 0, 1, this.cameraPosition.x, this.cameraPosition.y);
+
+    if (this.shapeCreator) this.shapeCreator.draw(this.ctx);
 
     this.ctx.fillStyle = "#0000";
     this.ctx.strokeStyle = "#000f";
