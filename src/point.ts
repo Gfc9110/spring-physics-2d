@@ -98,6 +98,13 @@ export class Point {
       ctx.stroke();
     }
   }
+  drawPoint(ctx: CanvasRenderingContext2D) {
+    ctx.fillStyle = "#000";
+    ctx.strokeStyle = "#0000";
+    ctx.beginPath();
+    ctx.arc(this.position.x, this.position.y, this.isFixed ? 4 : 2, 0, Math.PI * 2);
+    ctx.fill();
+  }
   addForce(force: Vector) {
     this.acceleration.add(force.copy().scale(1 / this.mass));
   }

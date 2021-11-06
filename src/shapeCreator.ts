@@ -48,3 +48,59 @@ export class ShapeCreator {
     return this.points[this.points.length - 1];
   }
 }
+
+export class AdvancedShapeCreator {
+  points: Point[] = [];
+  springs: Spring[] = [];
+  creatingSpring: { a: Vector, b: Vector };
+  structure: SoftStructure;
+  startPoint: Point;
+  constructor(public world: World) {
+    this.structure = new SoftStructure(world);
+  }
+  addPoint(position: Vector) {
+    this.points.push(new Point(this.structure, position))
+  }
+  startSpring(position: Vector) {
+    this.startPoint = this.points.find(p => p.position.distanceSq(position) < 400);
+    if (this.startPoint) {
+      this.creatingSpring = { a: this.startPoint.position, b: position };
+    }
+  }
+  mouseMove(position: Vector) {
+    if (this.creatingSpring) {
+      let endPoint = this.points.find(p => p != this.startPoint && p.position.distanceSq(position) < 900);
+      this.creatingSpring.b = endPoint?.position || position;
+    }
+  }
+  endSpring(position: Vector) {
+    if (this.startPoint) {
+      let endPoint = this.points.find(p => p != this.startPoint && p.position.distanceSq(position) < 900);
+      if (endPoint) {
+        this.springs.push(new Spring(this.startPoint, endPoint, 500, null, this.world.inputs.get("ControlLeft")));
+        if (this.world.inputs.get("ControlLeft")) { 
+          this.startPoint.isExternal = true;
+          endPoint.isExternal = true;
+        }
+      }
+      this.creatingSpring = null;
+    }
+  }
+  draw(ctx: CanvasRenderingContext2D) {
+    this.points.forEach(p => p.drawPoint(ctx))
+    this.springs.forEach(s => s.draw(ctx))
+    if (this.creatingSpring) {
+      ctx.strokeStyle = "#000f";
+      ctx.fillStyle = "#0000";
+      ctx.beginPath();
+      ctx.moveTo(this.creatingSpring.a.x, this.creatingSpring.a.y);
+      ctx.lineTo(this.creatingSpring.b.x, this.creatingSpring.b.y);
+      ctx.stroke();
+    }
+  }
+  create() {
+    this.structure.points = this.points;
+    this.structure.springs = this.springs;
+    this.world.structures.push(this.structure);
+  }
+}

@@ -1,6 +1,6 @@
 import { Inputs } from "./inputs";
 import { Point } from "./point";
-import { ShapeCreator } from "./shapeCreator";
+import { AdvancedShapeCreator, ShapeCreator } from "./shapeCreator";
 import { Stats } from "./stats";
 import { SoftStructure, SoftCircle, Cord, BoundingBox, SoftBox, JumpingBox, OpenDonut } from "./structures";
 import { Vector } from "./vector";
@@ -22,7 +22,10 @@ export class World {
   cameraPosition: Vector;
   draggingCamera: boolean = false;
   shapeCreator: ShapeCreator;
+  createMode: boolean = false;
+  advancedShapeCreator: AdvancedShapeCreator;
   constructor() {
+    this.advancedShapeCreator = new AdvancedShapeCreator(this);
     this.canvas = document.createElement("canvas");
     this.cameraPosition = new Vector(0, 0);
     this.canvas.width = window.innerWidth;
@@ -57,22 +60,39 @@ export class World {
     document.body.addEventListener("mousemove", this.handleMousemove.bind(this));
     document.body.addEventListener("contextmenu", (event) => event.preventDefault());
     window.addEventListener("mouseup", this.handleMouseup.bind(this));
+    this.inputs.on("Tab", () => {
+      this.createMode = !this.createMode;
+    });
+    this.inputs.on("Enter", () => {
+      if (this.createMode) {
+        this.advancedShapeCreator.create();
+        this.advancedShapeCreator = new AdvancedShapeCreator(this);
+        this.createMode = false;
+      }
+    })
   }
   handleMousedown(event: MouseEvent) {
     event.preventDefault();
-    console.log(event.button);
     this.mousePosition = new Vector(event.clientX, event.clientY).sub(this.cameraPosition);
     if (event.button == 0) {
-      let point: Point;
-      for (let i = 0; i < this.structures.length; i++) {
-        if (point = this.structures[i].testPoint(this.mousePosition)) break;
+      if (!this.createMode) {
+        let point: Point;
+        for (let i = 0; i < this.structures.length; i++) {
+          if (point = this.structures[i].testPoint(this.mousePosition)) break;
+        }
+        this.draggingPoint = point;
+      } else {
+        this.advancedShapeCreator.addPoint(this.mousePosition);
       }
-      this.draggingPoint = point;
     } else if (event.button == 1) {
       this.draggingCamera = true;
     } else if (event.button == 2) {
-      this.shapeCreator = new ShapeCreator(this);
-      this.shapeCreator.next(this.mousePosition);
+      if (!this.createMode) {
+        this.shapeCreator = new ShapeCreator(this);
+        this.shapeCreator.next(this.mousePosition);
+      } else {
+        this.advancedShapeCreator.startSpring(this.mousePosition);
+      }
     }
   }
   handleMousemove(event: MouseEvent) {
@@ -85,8 +105,12 @@ export class World {
 
     this.mousePosition = new Vector(event.clientX, event.clientY).sub(this.cameraPosition);
 
-    if (this.shapeCreator) {
+    if (this.shapeCreator && !this.createMode) {
       this.shapeCreator.next(this.mousePosition);
+    }
+
+    if (this.createMode) {
+      this.advancedShapeCreator.mouseMove(this.mousePosition);
     }
     //}
   }
@@ -98,7 +122,10 @@ export class World {
     } else if (event.button == 1) {
       this.draggingCamera = false;
     } else if (event.button == 2) {
-      this.shapeCreator.end(this.mousePosition);
+      this.shapeCreator?.end(this.mousePosition);
+      if (this.createMode) {
+        this.advancedShapeCreator.endSpring(this.mousePosition);
+      }
     }
   }
   animationCallback(time: number) {
@@ -106,8 +133,6 @@ export class World {
     fps.textContent = this.stats.fps.toFixed(2) + " FPS";
     const deltaTime = Math.min(1 / this.stats.fps, 0.008);
     this.lastTime = time;
-
-    this.draggingPoint?.addForce(this.mousePosition.copy().sub(this.draggingPoint.position).scale(0.1 * this.draggingPoint.mass));
 
     this.ctx.fillStyle = "#fff8";
     this.ctx.strokeStyle = "#fff0";
@@ -125,11 +150,15 @@ export class World {
     this.ctx.lineTo(this.bounds.position.x + this.bounds.size.x, this.bounds.position.y + this.bounds.size.y);
     this.ctx.lineTo(this.bounds.position.x + this.bounds.size.x, this.bounds.position.y);
     this.ctx.stroke();
-
-    this.structures[1].addTorque(-.5);
     //this.structures[1].addTorque(.5);
 
-    this.structures.forEach(s => s.update(deltaTime));
+    if (!this.createMode) {
+      this.draggingPoint?.addForce(this.mousePosition.copy().sub(this.draggingPoint.position).scale(0.1 * this.draggingPoint.mass));
+      this.structures[1].addTorque(-.5);
+      this.structures.forEach(s => s.update(deltaTime));
+    } else {
+      this.advancedShapeCreator.draw(this.ctx)
+    }
     this.time += deltaTime;
     this.structures.forEach(s => s.drawOutline(this.ctx));
     this.structures.forEach(s => s.draw(this.ctx));
