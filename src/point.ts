@@ -146,14 +146,17 @@ export class Point {
         const springVelocityAtImpact = is.pointA.velocity.copy().scale(1 - t).add(is.pointB.velocity.copy().scale(t));
         const springMassAtImpact = is.pointA.mass * (1 - t) + is.pointB.mass * t;
 
-        const springTangentVelocityAtImpact = springVelocityAtImpact.projectOn(is.pointA.position.copy().sub(is.pointB.position));
-        const tangentVelocity = this.velocity.projectOn(is.pointA.position.copy().sub(is.pointB.position));
+        const springTangentVelocityAtImpact = springVelocityAtImpact.projectOn(is.pointA.position.copy().sub(is.pointB.position).scale(100).sub(new Vector(50, 50)));
+        const tangentVelocity = this.velocity.projectOn(is.pointA.position.copy().sub(is.pointB.position).scale(100).sub(new Vector(50, 50)));
 
         const springNormalVelocityAtImpact = springVelocityAtImpact.copy().sub(springTangentVelocityAtImpact);
-        const normalVelocity = this.velocity.copy().sub(tangentVelocity);
+        const normalVelocity = this.velocity.copy().sub(tangentVelocity);        
 
-        springTangentVelocityAtImpact.scale(0.9);
-        tangentVelocity.scale(0.9);
+        tangentVelocity.add(springTangentVelocityAtImpact.copy().sub(tangentVelocity).scale(0.1));
+        springTangentVelocityAtImpact.add(tangentVelocity.copy().sub(springTangentVelocityAtImpact).scale(0.1));
+
+        //springTangentVelocityAtImpact.scale(0.9);
+        //tangentVelocity.scale(0.9);
 
         const finalNormalVelocity = springNormalVelocityAtImpact.copy().scale(springMassAtImpact).add(normalVelocity.copy().scale(this.mass)).scale(1 / (this.mass + springMassAtImpact)).scale(this.isFixed ? 0 : 1);
 
