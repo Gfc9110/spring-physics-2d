@@ -3,9 +3,12 @@ import { Vector } from "./vector";
 
 export class Spring {
   private _targetDistance: number;
-  constructor(public pointA: Point, public pointB: Point, public constant = 200, public distance?: number, public isSide = false, public damping = 2) {
+  constructor(public pointA: Point, public pointB: Point, public constant: number = null, public distance?: number, public isSide = false, public damping = 2) {
     if (!distance) {
       this.distance = pointA.position.distance(pointB.position);
+    }
+    if (!constant) {
+      this.constant = this.distance * 3;
     }
   }
   update(delta: number) {

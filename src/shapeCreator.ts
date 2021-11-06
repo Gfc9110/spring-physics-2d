@@ -18,16 +18,16 @@ export class ShapeCreator {
     let points = this.points.map(v => new Point(structure, v, 1, false, true));
     let springs = [];
     for (let i = 1; i < points.length; i++) {
-      springs.push(new Spring(points[i], points[i - 1], 1000, null, true));
+      springs.push(new Spring(points[i], points[i - 1], null, null, true));
       if (i == points.length - 1) {
-        springs.push(new Spring(points[i], points[0], 1000, null, true));
+        springs.push(new Spring(points[i], points[0], null, null, true));
       }
     }
 
     structure.points = points;
     structure.springs = springs;
     let centerPoint = new Point(structure, structure.center, 1, false, false);
-    springs.push(...points.map(p => new Spring(p, centerPoint, 1000)));
+    springs.push(...points.map(p => new Spring(p, centerPoint)));
     points.push(centerPoint);
     this.world.structures.push(structure);
     this.world.shapeCreator = null;
@@ -77,8 +77,8 @@ export class AdvancedShapeCreator {
     if (this.startPoint) {
       let endPoint = this.points.find(p => p != this.startPoint && p.position.distanceSq(position) < 900);
       if (endPoint) {
-        this.springs.push(new Spring(this.startPoint, endPoint, 500, null, this.world.inputs.get("ControlLeft")));
-        if (this.world.inputs.get("ControlLeft")) { 
+        this.springs.push(new Spring(this.startPoint, endPoint, null, null, this.world.inputs.get("ControlLeft")));
+        if (this.world.inputs.get("ControlLeft")) {
           this.startPoint.isExternal = true;
           endPoint.isExternal = true;
         }
@@ -97,6 +97,11 @@ export class AdvancedShapeCreator {
       ctx.lineTo(this.creatingSpring.b.x, this.creatingSpring.b.y);
       ctx.stroke();
     }
+  }
+  reset() {
+    this.points = [];
+    this.springs = [];
+    this.structure = new SoftStructure(this.world);
   }
   create() {
     this.structure.points = this.points;

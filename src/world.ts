@@ -66,9 +66,12 @@ export class World {
     this.inputs.on("Enter", () => {
       if (this.createMode) {
         this.advancedShapeCreator.create();
-        this.advancedShapeCreator = new AdvancedShapeCreator(this);
+        this.advancedShapeCreator.reset();
         this.createMode = false;
       }
+    })
+    this.inputs.on("Escape", () => {
+      this.advancedShapeCreator.reset();
     })
   }
   handleMousedown(event: MouseEvent) {

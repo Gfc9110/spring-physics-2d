@@ -30,18 +30,19 @@ export class SoftStructure {
     this.points.forEach(p => p.update(delta, this.world.base));
   }
   drawOutline(ctx: CanvasRenderingContext2D) {
-    const outline = this.outline;
-    ctx.lineWidth = 1;
     ctx.fillStyle = this.fillStyle;
     ctx.strokeStyle = this.strokeStyle;
-    ctx.beginPath();
-    ctx.moveTo(outline[0].x, outline[0].y);
-    outline.forEach((v, i) => {
-      i == 0 ? ctx.moveTo(v.x, v.y) : ctx.lineTo(v.x, v.y)
+    this.outlines.forEach(outline => {
+      ctx.lineWidth = 1;
+      ctx.beginPath();
+      ctx.moveTo(outline[0].x, outline[0].y);
+      outline.forEach((v, i) => {
+        i == 0 ? ctx.moveTo(v.x, v.y) : ctx.lineTo(v.x, v.y)
+      })
+      ctx.closePath();
+      ctx.fill();
+      ctx.stroke();
     })
-    ctx.closePath();
-    ctx.fill();
-    ctx.stroke();
   }
   draw(ctx: CanvasRenderingContext2D) {
     this.points.forEach(p => p.draw(ctx));
@@ -90,14 +91,18 @@ export class SoftStructure {
     })
     return new BoundingBox(new Vector(minX, minY), new Vector(maxX - minX, maxY - minY));
   }
-  get outline() {
-    let outlinePoints: Point[] = [];
-    let currentPoint = this.points.find((p) => p.isExternal);
-    while (currentPoint) {
-      outlinePoints.push(currentPoint);
-      currentPoint = currentPoint.neighbors.find(n => n.isExternal && !outlinePoints.find(op => op == n) && this.springs.find(s => s.isSide && (s.pointA == currentPoint && s.pointB == n) || (s.pointB == currentPoint && s.pointA == n)));
+  get outlines() {
+    const outlines: Point[][] = [];
+    while (this.points.find((p) => p.isExternal && !outlines.flat().find(p1 => p == p1))) {
+      let outlinePoints: Point[] = [];
+      let currentPoint = this.points.find((p) => p.isExternal && !outlines.flat().find(p1 => p == p1));
+      while (currentPoint) {
+        outlinePoints.push(currentPoint);
+        currentPoint = currentPoint.neighbors.find(n => n.isExternal && !outlinePoints.find(op => op == n) && this.springs.find(s => s.isSide && ((s.pointA == currentPoint && s.pointB == n) || (s.pointB == currentPoint && s.pointA == n))));
+      }
+      outlines.push(outlinePoints);
     }
-    return outlinePoints.map(p => p.position);
+    return outlines.map(pts => pts.map(p => p.position));
   }
 }
 
@@ -122,7 +127,6 @@ export class SoftCircle extends SoftStructure {
       }
       lastPoint = point
     }
-    console.log(this.outline);
   }
   update(delta: number) {
     //this.centerPoint.addForce(new Vector(1, 0))
