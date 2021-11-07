@@ -273,7 +273,7 @@ export class Car extends SoftStructure {
   rightWheelPoints: Point[];
   rightWheelAnchorPoint: Point;
   leftWheelAnchorPoint: Point;
-  constructor(world: World, center: Vector, size: Vector, wheelRadius: number, wheelDistance: number, wheelStep = 10) {
+  constructor(world: World, center: Vector, size: Vector, wheelRadius: number, wheelDistance: number, wheelStep = 16) {
     super(world);
 
     //BODY
@@ -297,11 +297,11 @@ export class Car extends SoftStructure {
     this.springs.push(new Spring(this.bodyPoints[0], this.bodyPoints[2], 10000))
     this.springs.push(new Spring(this.bodyPoints[1], this.bodyPoints[5], 10000))
 
-    this.springs.push(new Spring(this.bodyPoints[3], this.bodyPoints[1], 10000))
-    this.springs.push(new Spring(this.bodyPoints[4], this.bodyPoints[0], 10000))
+    this.springs.push(new Spring(this.bodyPoints[3], this.bodyPoints[1], 5000))
+    this.springs.push(new Spring(this.bodyPoints[4], this.bodyPoints[0], 5000))
 
-    this.springs.push(new Spring(this.bodyPoints[3], this.bodyPoints[0], 10000))
-    this.springs.push(new Spring(this.bodyPoints[4], this.bodyPoints[1], 10000))
+    this.springs.push(new Spring(this.bodyPoints[3], this.bodyPoints[0], 5000))
+    this.springs.push(new Spring(this.bodyPoints[4], this.bodyPoints[1], 5000))
 
     this.points.push(...this.bodyPoints);
 
@@ -311,20 +311,20 @@ export class Car extends SoftStructure {
     let angle = Math.PI * 2 / wheelStep;
     let offset = new Vector(wheelRadius, 0)
     for (let i = 0; i < wheelStep; i++) {
-      this.leftWheelPoints.push(new Point(this, offset.rotate(angle).copy().add(this.leftWheelAnchorPoint.position), 1, false, true));
-      this.springs.push(new Spring(this.leftWheelPoints[i], this.leftWheelAnchorPoint, 500));
+      this.leftWheelPoints.push(new Point(this, offset.rotate(angle).copy().add(this.leftWheelAnchorPoint.position), 2, false, true));
+      this.springs.push(new Spring(this.leftWheelPoints[i], this.leftWheelAnchorPoint, 1000));
       if (i > 0) {
-        this.springs.push(new Spring(this.leftWheelPoints[i], this.leftWheelPoints[i - 1], null, null, true));
+        this.springs.push(new Spring(this.leftWheelPoints[i], this.leftWheelPoints[i - 1], 500, null, true));
       }
       if (i > 1) {
-        this.springs.push(new Spring(this.leftWheelPoints[i], this.leftWheelPoints[i - 2]));
+        this.springs.push(new Spring(this.leftWheelPoints[i], this.leftWheelPoints[i - 2], 500));
       }
       if (i == wheelStep - 2) {
-        this.springs.push(new Spring(this.leftWheelPoints[0], this.leftWheelPoints[i]));
+        this.springs.push(new Spring(this.leftWheelPoints[0], this.leftWheelPoints[i], 500));
       }
       if (i == wheelStep - 1) {
-        this.springs.push(new Spring(this.leftWheelPoints[0], this.leftWheelPoints[i], null, null, true));
-        this.springs.push(new Spring(this.leftWheelPoints[1], this.leftWheelPoints[i]));
+        this.springs.push(new Spring(this.leftWheelPoints[0], this.leftWheelPoints[i], 500, null, true));
+        this.springs.push(new Spring(this.leftWheelPoints[1], this.leftWheelPoints[i], 500));
       }
     }
     this.points.push(...this.leftWheelPoints);
@@ -335,20 +335,20 @@ export class Car extends SoftStructure {
     //let angle = Math.PI * 2 / wheelStep;
     //let offset = new Vector(wheelRadius, 0)
     for (let i = 0; i < wheelStep; i++) {
-      this.rightWheelPoints.push(new Point(this, offset.rotate(angle).copy().add(this.rightWheelAnchorPoint.position), 1, false, true));
-      this.springs.push(new Spring(this.rightWheelPoints[i], this.rightWheelAnchorPoint, 500));
+      this.rightWheelPoints.push(new Point(this, offset.rotate(angle).copy().add(this.rightWheelAnchorPoint.position), 2, false, true));
+      this.springs.push(new Spring(this.rightWheelPoints[i], this.rightWheelAnchorPoint, 1000));
       if (i > 0) {
-        this.springs.push(new Spring(this.rightWheelPoints[i], this.rightWheelPoints[i - 1], null, null, true));
+        this.springs.push(new Spring(this.rightWheelPoints[i], this.rightWheelPoints[i - 1], 500, null, true));
       }
       if (i > 1) {
-        this.springs.push(new Spring(this.rightWheelPoints[i], this.rightWheelPoints[i - 2]));
+        this.springs.push(new Spring(this.rightWheelPoints[i], this.rightWheelPoints[i - 2], 50));
       }
       if (i == wheelStep - 2) {
-        this.springs.push(new Spring(this.rightWheelPoints[0], this.rightWheelPoints[i]));
+        this.springs.push(new Spring(this.rightWheelPoints[0], this.rightWheelPoints[i], 500));
       }
       if (i == wheelStep - 1) {
-        this.springs.push(new Spring(this.rightWheelPoints[0], this.rightWheelPoints[i], null, null, true));
-        this.springs.push(new Spring(this.rightWheelPoints[1], this.rightWheelPoints[i]));
+        this.springs.push(new Spring(this.rightWheelPoints[0], this.rightWheelPoints[i], 500, null, true));
+        this.springs.push(new Spring(this.rightWheelPoints[1], this.rightWheelPoints[i], 500));
       }
     }
     this.points.push(...this.rightWheelPoints);
