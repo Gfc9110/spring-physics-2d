@@ -65,6 +65,9 @@ export class Vector {
   get angle() {
     return Math.atan2(this.y, this.x);
   }
+  angleTo(v: Vector) {
+    return Math.acos(v.dot(this) / (this.length * v.length))
+  }
 }
 
 export function lerpColor(a: string, b: string, amount: number) {

@@ -1,5 +1,5 @@
 import { mousePickDistancesq } from "./constants";
-import { Point } from "./point";
+import { Point, Segment } from "./point";
 import { Spring } from "./spring";
 import { lerpColor, Vector } from "./vector";
 import { World } from "./world";
@@ -12,6 +12,7 @@ export class BoundingBox {
   }
 }
 export class SoftStructure {
+  normalsRecalculated = false;
   random: number;
   gravityScale: number = 1;
   testPoint(position: Vector, maxDistanceSq: number = mousePickDistancesq) {
@@ -25,12 +26,16 @@ export class SoftStructure {
     this.random = Math.random();
   }
   update(delta: number) {
+    if (!this.normalsRecalculated) { 
+      this.recalculateNormals();
+      this.normalsRecalculated = true;
+    }
     this.points.forEach(p => p.addForce(this.world.gravity.copy().scale(p.mass)));
     this.springs.forEach(s => s.update(delta));
     this.points.forEach(p => p.update(delta, this.world.base));
   }
   drawOutline(ctx: CanvasRenderingContext2D) {
-    ctx.fillStyle = this.fillStyle;
+    ctx.fillStyle = "#0000";
     ctx.strokeStyle = this.strokeStyle;
     this.outlines.forEach(outline => {
       ctx.lineWidth = 1;
@@ -43,6 +48,7 @@ export class SoftStructure {
       ctx.fill();
       ctx.stroke();
     })
+    this.springs.filter(s => s.isSide).forEach(s => s.drawNormal(ctx));
   }
   draw(ctx: CanvasRenderingContext2D) {
     this.points.forEach(p => p.draw(ctx));
@@ -103,6 +109,17 @@ export class SoftStructure {
       outlines.push(outlinePoints);
     }
     return outlines.map(pts => pts.map(p => p.position));
+  }
+  isPositionInside(position: Vector) {
+    let testSegment = new Segment(position, this.center.add(this.boundingBox.size));
+    return this.springs.filter(sp => sp.isSide && sp.segment.intersects(testSegment)).length % 2 == 1;
+  }
+  recalculateNormals() {
+    this.springs.filter(s => s.isSide).forEach(s => {
+      if (this.isPositionInside(s.center.add(s.segment.normal))) {
+        s.invertNormals();
+      }
+    })
   }
 }
 
