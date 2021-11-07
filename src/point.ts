@@ -114,7 +114,7 @@ export class Point {
     if (!this.isFixed) {
       this.velocity.add(this.acceleration.scale(delta));
 
-      this.velocity.scale(0.999);
+      //this.velocity.scale(0.999);
     }
 
     let newPosition = this.position.copy().add(this.velocity);
@@ -142,8 +142,8 @@ export class Point {
       const springNormalVelocityAtImpact = springVelocityAtImpact.copy().sub(springTangentVelocityAtImpact);
       const normalVelocity = this.velocity.copy().sub(tangentVelocity);
 
-      tangentVelocity.add(springTangentVelocityAtImpact.copy().sub(tangentVelocity).scale(0.1));
-      springTangentVelocityAtImpact.add(tangentVelocity.copy().sub(springTangentVelocityAtImpact).scale(0.1));
+      tangentVelocity.add(springTangentVelocityAtImpact.copy().sub(tangentVelocity).scale(0.2));
+      springTangentVelocityAtImpact.add(tangentVelocity.copy().sub(springTangentVelocityAtImpact).scale(0.2));
 
       //springTangentVelocityAtImpact.scale(0.9);
       //tangentVelocity.scale(0.9);
@@ -189,11 +189,11 @@ export class Point {
     if (this.position.x < bounds.position.x) {
       this.position.x = bounds.position.x;
       this.velocity.x = 0;
-      this.velocity.scale(0.9);
+      this.velocity.scale(0.8);
     } else if (this.position.x > bounds.position.x + bounds.size.x) {
       this.position.x = bounds.position.x + bounds.size.x;
       this.velocity.x = 0;
-      this.velocity.scale(0.9);
+      this.velocity.scale(0.8);
     }
 
     if (this.position.y < bounds.position.y) {
@@ -203,7 +203,7 @@ export class Point {
     } else if (this.position.y > bounds.position.y + bounds.size.y) {
       this.position.y = bounds.position.y + bounds.size.y;
       this.velocity.y = 0;
-      this.velocity.scale(0.9);
+      this.velocity.scale(0.8);
     }
 
     this.acceleration = new Vector();

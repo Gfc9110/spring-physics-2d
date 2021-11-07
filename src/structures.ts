@@ -26,8 +26,8 @@ export class SoftStructure {
     this.random = Math.random();
   }
   update(delta: number) {
-    if (!this.normalsRecalculated) { 
-      this.recalculateNormals();
+    if (!this.normalsRecalculated) {
+      //this.recalculateNormals();
       this.normalsRecalculated = true;
     }
     this.points.forEach(p => p.addForce(this.world.gravity.copy().scale(p.mass)));
@@ -35,7 +35,7 @@ export class SoftStructure {
     this.points.forEach(p => p.update(delta, this.world.base));
   }
   drawOutline(ctx: CanvasRenderingContext2D) {
-    ctx.fillStyle = "#0000";
+    ctx.fillStyle = this.fillStyle;
     ctx.strokeStyle = this.strokeStyle;
     this.outlines.forEach(outline => {
       ctx.lineWidth = 1;
@@ -48,7 +48,7 @@ export class SoftStructure {
       ctx.fill();
       ctx.stroke();
     })
-    this.springs.filter(s => s.isSide).forEach(s => s.drawNormal(ctx));
+    //this.springs.filter(s => s.isSide).forEach(s => s.drawNormal(ctx));
   }
   draw(ctx: CanvasRenderingContext2D) {
     this.points.forEach(p => p.draw(ctx));
@@ -117,7 +117,9 @@ export class SoftStructure {
   recalculateNormals() {
     this.springs.filter(s => s.isSide).forEach(s => {
       if (this.isPositionInside(s.center.add(s.segment.normal))) {
-        s.invertNormals();
+        console.log(this)
+        console.log("invertingNormal")
+        //s.invertNormals();
       }
     })
   }
@@ -262,5 +264,128 @@ export class OpenDonut extends SoftStructure {
         this.springs.push(new Spring(externalPoints[i], internalPoints[i], 1000, null, false));
       }
     }
+  }
+}
+
+export class Car extends SoftStructure {
+  bodyPoints: Point[];
+  leftWheelPoints: Point[];
+  rightWheelPoints: Point[];
+  rightWheelAnchorPoint: Point;
+  leftWheelAnchorPoint: Point;
+  constructor(world: World, center: Vector, size: Vector, wheelRadius: number, wheelDistance: number, wheelStep = 10) {
+    super(world);
+
+    //BODY
+    this.bodyPoints = [];
+    this.bodyPoints.push(new Point(this, center.copy().add(size.copy().scale(-0.5)), 5, false, true)); // 0
+    this.bodyPoints.push(new Point(this, center.copy().add(new Vector(size.x / 2, -size.y / 2)), 5, false, true)); // 1
+    this.bodyPoints.push(new Point(this, center.copy().add(size.copy().scale(0.5)), 5, false, true)); // 2
+
+    this.bodyPoints.push(this.rightWheelAnchorPoint = new Point(this, center.copy().add(new Vector(size.x * wheelDistance / 2, size.y / 2)), 5, false, true)); // 3
+    this.bodyPoints.push(this.leftWheelAnchorPoint = new Point(this, center.copy().add(new Vector(-size.x * wheelDistance / 2, size.y / 2)), 5, false, true)); // 4
+
+    this.bodyPoints.push(new Point(this, center.copy().add(new Vector(-size.x / 2, size.y / 2)), 5, false, true)); // 5
+
+    for (let i = 1; i < this.bodyPoints.length; i++) {
+      this.springs.push(new Spring(this.bodyPoints[i], this.bodyPoints[i - 1], 10000, null, true))
+      if (i == this.bodyPoints.length - 1) {
+        this.springs.push(new Spring(this.bodyPoints[0], this.bodyPoints[i], 10000, null, true))
+      }
+    }
+
+    this.springs.push(new Spring(this.bodyPoints[0], this.bodyPoints[2], 10000))
+    this.springs.push(new Spring(this.bodyPoints[1], this.bodyPoints[5], 10000))
+
+    this.springs.push(new Spring(this.bodyPoints[3], this.bodyPoints[1], 10000))
+    this.springs.push(new Spring(this.bodyPoints[4], this.bodyPoints[0], 10000))
+
+    this.springs.push(new Spring(this.bodyPoints[3], this.bodyPoints[0], 10000))
+    this.springs.push(new Spring(this.bodyPoints[4], this.bodyPoints[1], 10000))
+
+    this.points.push(...this.bodyPoints);
+
+    //LEFT WHEEL
+
+    this.leftWheelPoints = [];
+    let angle = Math.PI * 2 / wheelStep;
+    let offset = new Vector(wheelRadius, 0)
+    for (let i = 0; i < wheelStep; i++) {
+      this.leftWheelPoints.push(new Point(this, offset.rotate(angle).copy().add(this.leftWheelAnchorPoint.position), 1, false, true));
+      this.springs.push(new Spring(this.leftWheelPoints[i], this.leftWheelAnchorPoint, 500));
+      if (i > 0) {
+        this.springs.push(new Spring(this.leftWheelPoints[i], this.leftWheelPoints[i - 1], null, null, true));
+      }
+      if (i > 1) {
+        this.springs.push(new Spring(this.leftWheelPoints[i], this.leftWheelPoints[i - 2]));
+      }
+      if (i == wheelStep - 2) {
+        this.springs.push(new Spring(this.leftWheelPoints[0], this.leftWheelPoints[i]));
+      }
+      if (i == wheelStep - 1) {
+        this.springs.push(new Spring(this.leftWheelPoints[0], this.leftWheelPoints[i], null, null, true));
+        this.springs.push(new Spring(this.leftWheelPoints[1], this.leftWheelPoints[i]));
+      }
+    }
+    this.points.push(...this.leftWheelPoints);
+
+    //RIGHT WHEEL
+
+    this.rightWheelPoints = [];
+    //let angle = Math.PI * 2 / wheelStep;
+    //let offset = new Vector(wheelRadius, 0)
+    for (let i = 0; i < wheelStep; i++) {
+      this.rightWheelPoints.push(new Point(this, offset.rotate(angle).copy().add(this.rightWheelAnchorPoint.position), 1, false, true));
+      this.springs.push(new Spring(this.rightWheelPoints[i], this.rightWheelAnchorPoint, 500));
+      if (i > 0) {
+        this.springs.push(new Spring(this.rightWheelPoints[i], this.rightWheelPoints[i - 1], null, null, true));
+      }
+      if (i > 1) {
+        this.springs.push(new Spring(this.rightWheelPoints[i], this.rightWheelPoints[i - 2]));
+      }
+      if (i == wheelStep - 2) {
+        this.springs.push(new Spring(this.rightWheelPoints[0], this.rightWheelPoints[i]));
+      }
+      if (i == wheelStep - 1) {
+        this.springs.push(new Spring(this.rightWheelPoints[0], this.rightWheelPoints[i], null, null, true));
+        this.springs.push(new Spring(this.rightWheelPoints[1], this.rightWheelPoints[i]));
+      }
+    }
+    this.points.push(...this.rightWheelPoints);
+
+  }
+  update(delta: number) {
+    if (this.world.inputs.get("KeyD")) {
+      this.leftWheelPoints.forEach(p => {
+        const offset = p.position.copy().sub(this.leftWheelAnchorPoint.position);
+        if (offset.length > 0) {
+          const direction = offset.copy().normalize().rotate(Math.PI / 2);
+          p.addForce(direction.scale(20 / offset.length))
+        }
+      })
+      this.rightWheelPoints.forEach(p => {
+        const offset = p.position.copy().sub(this.rightWheelAnchorPoint.position);
+        if (offset.length > 0) {
+          const direction = offset.copy().normalize().rotate(Math.PI / 2);
+          p.addForce(direction.scale(20 / offset.length))
+        }
+      })
+    } else if (this.world.inputs.get("KeyA")) {
+      this.leftWheelPoints.forEach(p => {
+        const offset = p.position.copy().sub(this.leftWheelAnchorPoint.position);
+        if (offset.length > 0) {
+          const direction = offset.copy().normalize().rotate(Math.PI / 2);
+          p.addForce(direction.scale(-20 / offset.length))
+        }
+      })
+      this.rightWheelPoints.forEach(p => {
+        const offset = p.position.copy().sub(this.rightWheelAnchorPoint.position);
+        if (offset.length > 0) {
+          const direction = offset.copy().normalize().rotate(Math.PI / 2);
+          p.addForce(direction.scale(-20 / offset.length))
+        }
+      })
+    }
+    super.update(delta);
   }
 }

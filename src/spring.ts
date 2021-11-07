@@ -4,12 +4,15 @@ import { Vector } from "./vector";
 export class Spring {
   private _targetDistance: number;
   normalsInverted: boolean;
-  constructor(public pointA: Point, public pointB: Point, public constant: number = null, public distance?: number, public isSide = false, public damping = 2) {
+  constructor(public pointA: Point, public pointB: Point, public constant: number = null, public distance?: number, public isSide = false, public damping: number = null) {
     if (!distance) {
       this.distance = pointA.position.distance(pointB.position);
     }
     if (!constant) {
       this.constant = this.distance * 3;
+    }
+    if (!damping) {
+      this.damping = this.constant / 100;
     }
   }
   update(delta: number) {
