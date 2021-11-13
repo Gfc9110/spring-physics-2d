@@ -79,7 +79,7 @@ export class Point {
   acceleration: Vector;
   _neighbors: Point[];
   _neighborsSegments: Segment[];
-  constructor(public structure: SoftStructure, public position: Vector/*, private world: World*/, public mass: number = 1, public isFixed = false, public isExternal = false) {
+  constructor(public structure: SoftStructure, public position: Vector/*, private world: World*/, public mass: number = 1, public isFixed = false, public isExternal = false, public friction = 1) {
     this.acceleration = new Vector();
     this.velocity = new Vector();
   }
@@ -114,7 +114,7 @@ export class Point {
     if (!this.isFixed) {
       this.velocity.add(this.acceleration.scale(delta));
 
-      //this.velocity.scale(0.999);
+      this.velocity.scale(0.9995);
     }
 
     let newPosition = this.position.copy().add(this.velocity);
@@ -131,6 +131,8 @@ export class Point {
       const momentB = radiusB * is.pointB.mass;
       const totalMoment = momentA + momentB;
 
+      const averageFriction = (this.friction + (is.pointA.friction * (1 - t) + is.pointB.friction * t)) / 2;
+
       const springVelocityAtImpact = is.pointA.velocity.copy().scale(1 - t).add(is.pointB.velocity.copy().scale(t));
       const springMassAtImpact = (is.pointA.mass * (1 - t) + is.pointB.mass * t) * 2;
 
@@ -142,8 +144,8 @@ export class Point {
       const springNormalVelocityAtImpact = springVelocityAtImpact.copy().sub(springTangentVelocityAtImpact);
       const normalVelocity = this.velocity.copy().sub(tangentVelocity);
 
-      tangentVelocity.add(springTangentVelocityAtImpact.copy().sub(tangentVelocity).scale(0.2));
-      springTangentVelocityAtImpact.add(tangentVelocity.copy().sub(springTangentVelocityAtImpact).scale(0.2));
+      tangentVelocity.add(springTangentVelocityAtImpact.copy().sub(tangentVelocity).scale(averageFriction));
+      springTangentVelocityAtImpact.add(tangentVelocity.copy().sub(springTangentVelocityAtImpact).scale(averageFriction));
 
       //springTangentVelocityAtImpact.scale(0.9);
       //tangentVelocity.scale(0.9);
@@ -189,11 +191,11 @@ export class Point {
     if (this.position.x < bounds.position.x) {
       this.position.x = bounds.position.x;
       this.velocity.x = 0;
-      this.velocity.scale(0.8);
+      this.velocity.scale(1 - this.friction);
     } else if (this.position.x > bounds.position.x + bounds.size.x) {
       this.position.x = bounds.position.x + bounds.size.x;
       this.velocity.x = 0;
-      this.velocity.scale(0.8);
+      this.velocity.scale(1 - this.friction);
     }
 
     if (this.position.y < bounds.position.y) {
@@ -203,7 +205,7 @@ export class Point {
     } else if (this.position.y > bounds.position.y + bounds.size.y) {
       this.position.y = bounds.position.y + bounds.size.y;
       this.velocity.y = 0;
-      this.velocity.scale(0.8);
+      this.velocity.scale(1 - this.friction);
     }
 
     this.acceleration = new Vector();

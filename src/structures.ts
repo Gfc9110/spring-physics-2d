@@ -273,19 +273,19 @@ export class Car extends SoftStructure {
   rightWheelPoints: Point[];
   rightWheelAnchorPoint: Point;
   leftWheelAnchorPoint: Point;
-  constructor(world: World, center: Vector, size: Vector, wheelRadius: number, wheelDistance: number, wheelStep = 16) {
+  constructor(world: World, center: Vector, size: Vector, wheelRadius: number, wheelDistance: number, wheelStep = 16, traction = 0.2) {
     super(world);
 
     //BODY
     this.bodyPoints = [];
-    this.bodyPoints.push(new Point(this, center.copy().add(size.copy().scale(-0.5)), 5, false, true)); // 0
-    this.bodyPoints.push(new Point(this, center.copy().add(new Vector(size.x / 2, -size.y / 2)), 5, false, true)); // 1
-    this.bodyPoints.push(new Point(this, center.copy().add(size.copy().scale(0.5)), 5, false, true)); // 2
+    this.bodyPoints.push(new Point(this, center.copy().add(size.copy().scale(-0.5)), 5, false, true, .3)); // 0
+    this.bodyPoints.push(new Point(this, center.copy().add(new Vector(size.x / 2, -size.y / 2)), 5, false, true, .3)); // 1
+    this.bodyPoints.push(new Point(this, center.copy().add(size.copy().scale(0.5)), 5, false, true, .3)); // 2
 
-    this.bodyPoints.push(this.rightWheelAnchorPoint = new Point(this, center.copy().add(new Vector(size.x * wheelDistance / 2, size.y / 2)), 5, false, true)); // 3
-    this.bodyPoints.push(this.leftWheelAnchorPoint = new Point(this, center.copy().add(new Vector(-size.x * wheelDistance / 2, size.y / 2)), 5, false, true)); // 4
+    this.bodyPoints.push(this.rightWheelAnchorPoint = new Point(this, center.copy().add(new Vector(size.x * wheelDistance / 2, size.y / 2)), 5, false, true, .3)); // 3
+    this.bodyPoints.push(this.leftWheelAnchorPoint = new Point(this, center.copy().add(new Vector(-size.x * wheelDistance / 2, size.y / 2)), 5, false, true, .3)); // 4
 
-    this.bodyPoints.push(new Point(this, center.copy().add(new Vector(-size.x / 2, size.y / 2)), 5, false, true)); // 5
+    this.bodyPoints.push(new Point(this, center.copy().add(new Vector(-size.x / 2, size.y / 2)), 5, false, true, .3)); // 5
 
     for (let i = 1; i < this.bodyPoints.length; i++) {
       this.springs.push(new Spring(this.bodyPoints[i], this.bodyPoints[i - 1], 10000, null, true))
@@ -311,7 +311,7 @@ export class Car extends SoftStructure {
     let angle = Math.PI * 2 / wheelStep;
     let offset = new Vector(wheelRadius, 0)
     for (let i = 0; i < wheelStep; i++) {
-      this.leftWheelPoints.push(new Point(this, offset.rotate(angle).copy().add(this.leftWheelAnchorPoint.position), 2, false, true));
+      this.leftWheelPoints.push(new Point(this, offset.rotate(angle).copy().add(this.leftWheelAnchorPoint.position), 2, false, true, traction));
       this.springs.push(new Spring(this.leftWheelPoints[i], this.leftWheelAnchorPoint, 1000));
       if (i > 0) {
         this.springs.push(new Spring(this.leftWheelPoints[i], this.leftWheelPoints[i - 1], 500, null, true));
@@ -335,7 +335,7 @@ export class Car extends SoftStructure {
     //let angle = Math.PI * 2 / wheelStep;
     //let offset = new Vector(wheelRadius, 0)
     for (let i = 0; i < wheelStep; i++) {
-      this.rightWheelPoints.push(new Point(this, offset.rotate(angle).copy().add(this.rightWheelAnchorPoint.position), 2, false, true));
+      this.rightWheelPoints.push(new Point(this, offset.rotate(angle).copy().add(this.rightWheelAnchorPoint.position), 2, false, true, traction));
       this.springs.push(new Spring(this.rightWheelPoints[i], this.rightWheelAnchorPoint, 1000));
       if (i > 0) {
         this.springs.push(new Spring(this.rightWheelPoints[i], this.rightWheelPoints[i - 1], 500, null, true));
@@ -360,14 +360,14 @@ export class Car extends SoftStructure {
         const offset = p.position.copy().sub(this.leftWheelAnchorPoint.position);
         if (offset.length > 0) {
           const direction = offset.copy().normalize().rotate(Math.PI / 2);
-          p.addForce(direction.scale(20 / offset.length))
+          p.addForce(direction.scale(80 / offset.length))
         }
       })
       this.rightWheelPoints.forEach(p => {
         const offset = p.position.copy().sub(this.rightWheelAnchorPoint.position);
         if (offset.length > 0) {
           const direction = offset.copy().normalize().rotate(Math.PI / 2);
-          p.addForce(direction.scale(20 / offset.length))
+          p.addForce(direction.scale(80 / offset.length))
         }
       })
     } else if (this.world.inputs.get("KeyA")) {
@@ -375,14 +375,14 @@ export class Car extends SoftStructure {
         const offset = p.position.copy().sub(this.leftWheelAnchorPoint.position);
         if (offset.length > 0) {
           const direction = offset.copy().normalize().rotate(Math.PI / 2);
-          p.addForce(direction.scale(-20 / offset.length))
+          p.addForce(direction.scale(-80 / offset.length))
         }
       })
       this.rightWheelPoints.forEach(p => {
         const offset = p.position.copy().sub(this.rightWheelAnchorPoint.position);
         if (offset.length > 0) {
           const direction = offset.copy().normalize().rotate(Math.PI / 2);
-          p.addForce(direction.scale(-20 / offset.length))
+          p.addForce(direction.scale(-80 / offset.length))
         }
       })
     }

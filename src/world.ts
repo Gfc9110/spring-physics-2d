@@ -57,7 +57,7 @@ export class World {
     //this.structures.push(new OpenDonut(this, new Vector((this.canvas.width * 3 / 4) - 200, this.bounds.position.y + this.bounds.size.y - 200), 60, 150, 16));
     //this.structures.push(new OpenDonut(this, new Vector((this.canvas.width * 3 / 4) + 200, this.bounds.position.y + this.bounds.size.y - 200), 60, 150, 16).rotate(Math.PI));
 
-    this.structures.push(new Car(this, new Vector(this.canvas.width / 2, this.canvas.height / 2), new Vector(300, 50), 40, .7))
+    this.structures.push(new Car(this, new Vector(this.canvas.width / 2, this.bounds.position.y + this.bounds.size.y - 100), new Vector(300, 50), 40, .7))
 
     document.body.addEventListener("mousedown", this.handleMousedown.bind(this));
     document.body.addEventListener("mousemove", this.handleMousemove.bind(this));
@@ -146,7 +146,7 @@ export class World {
   animationCallback(time: number) {
     this.stats.ms(time - this.lastTime);
     fps.textContent = this.stats.fps.toFixed(2) + " FPS";
-    const deltaTime = Math.min(1 / this.stats.fps, 0.008);
+    const deltaTime = Math.min(1 / this.stats.fps, 0.02);
     this.lastTime = time;
 
     this.ctx.fillStyle = "#fff8";
