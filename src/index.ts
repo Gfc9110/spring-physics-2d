@@ -1,4 +1,4 @@
+import { Editor } from './editor';
 import './styles/style.scss';
-import { World } from './world';
 
-new World();
+new Editor();

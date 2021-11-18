@@ -355,7 +355,7 @@ export class Car extends SoftStructure {
 
   }
   update(delta: number) {
-    if (this.world.inputs.get("KeyD")) {
+    /*if (this.world.inputs.get("KeyD")) {
       this.leftWheelPoints.forEach(p => {
         const offset = p.position.copy().sub(this.leftWheelAnchorPoint.position);
         if (offset.length > 0) {
@@ -385,7 +385,7 @@ export class Car extends SoftStructure {
           p.addForce(direction.scale(-80 / offset.length))
         }
       })
-    }
+    }*/
     super.update(delta);
   }
 }

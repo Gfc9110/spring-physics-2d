@@ -18,3 +18,46 @@ body {
         font: bold 18px sans-serif;
     }
 }
+
+.mdi {
+    font-size: 24px;
+    margin: 0 10px;
+}
+
+#toolbar {
+    position: fixed;
+    left: calc(100% - 88px);
+    display: flex;
+    flex-direction: column;
+    padding: 20px;
+    max-height: 100vh;
+    .toolgroup {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        .tool {
+            width: 48px;
+            height: 48px;
+            background-color: white;
+            border-radius: 50%;
+            box-shadow: 0 0 8px #0003;
+            transition: box-shadow 0.1s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 20px;
+            .mdi {
+                margin: 0;
+            }
+            &:hover {
+                box-shadow: 0 0 16px #0003;
+            }
+            &:active {
+                box-shadow: 0 0 4px #0003;
+            }
+        }
+    }
+    &.open {
+        left: calc(100% - 64px);
+    }
+}

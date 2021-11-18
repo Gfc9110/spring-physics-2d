@@ -15,9 +15,9 @@ export class World {
   structures: SoftStructure[] = [];
   draggingPoint: Point;
   mousePosition: Vector;
-  bounds: BoundingBox;
+  //bounds: BoundingBox;
   stats: Stats = new Stats();
-  time: number = 0;
+  time: number// = 0;
   inputs: Inputs;
   cameraPosition: Vector;
   draggingCamera: boolean = false;
@@ -26,18 +26,18 @@ export class World {
   advancedShapeCreator: AdvancedShapeCreator;
   runNextPhysicUpdate: boolean = false;
   constructor() {
-    this.advancedShapeCreator = new AdvancedShapeCreator(this);
-    this.canvas = document.createElement("canvas");
-    this.cameraPosition = new Vector(0, 0);
-    this.canvas.width = window.innerWidth;
-    this.canvas.height = window.innerHeight;
-    document.body.appendChild(this.canvas);
-    this.ctx = this.canvas.getContext('2d');
-    this.inputs = new Inputs();
-    window.requestAnimationFrame(this.animationCallback.bind(this));
+    //this.advancedShapeCreator = new AdvancedShapeCreator(this);
+    //this.canvas = document.createElement("canvas");
+    //this.cameraPosition = new Vector(0, 0);
+    //this.canvas.width = window.innerWidth;
+    //this.canvas.height = window.innerHeight;
+    //document.body.appendChild(this.canvas);
+    //this.ctx = this.canvas.getContext('2d');
+    //this.inputs = new Inputs();
+    //window.requestAnimationFrame(this.animationCallback.bind(this));
     this.gravity = new Vector(0, .8);
     this.base = window.innerHeight - 100;
-    this.bounds = new BoundingBox(new Vector(-5000, 20), new Vector(window.innerWidth + 10000, window.innerHeight - 40));
+    //this.bounds = new BoundingBox(new Vector(-5000, 20), new Vector(window.innerWidth + 10000, window.innerHeight - 40));
 
     //this.structures.push(new Cord(this, new Vector(this.canvas.width / 2 - 300, this.base - 600), new Vector(this.canvas.width / 2 + 300, this.base - 600), 10, true, true, 200, 100));
     //this.structures.push(new SoftCircle(this, new Vector(this.canvas.width / 2 - 80 + 200, this.base - 200), 100, 4, 90000, true, 100));
@@ -57,13 +57,13 @@ export class World {
     //this.structures.push(new OpenDonut(this, new Vector((this.canvas.width * 3 / 4) - 200, this.bounds.position.y + this.bounds.size.y - 200), 60, 150, 16));
     //this.structures.push(new OpenDonut(this, new Vector((this.canvas.width * 3 / 4) + 200, this.bounds.position.y + this.bounds.size.y - 200), 60, 150, 16).rotate(Math.PI));
 
-    this.structures.push(new Car(this, new Vector(this.canvas.width / 2, this.bounds.position.y + this.bounds.size.y - 100), new Vector(300, 50), 40, .7))
+    //this.structures.push(new Car(this, new Vector(this.canvas.width / 2, this.bounds.position.y + this.bounds.size.y - 100), new Vector(300, 50), 40, .7))
 
-    document.body.addEventListener("mousedown", this.handleMousedown.bind(this));
-    document.body.addEventListener("mousemove", this.handleMousemove.bind(this));
-    document.body.addEventListener("contextmenu", (event) => event.preventDefault());
-    window.addEventListener("mouseup", this.handleMouseup.bind(this));
-    this.inputs.on("Tab", () => {
+    //document.body.addEventListener("mousedown", this.handleMousedown.bind(this));
+    //document.body.addEventListener("mousemove", this.handleMousemove.bind(this));
+    //document.body.addEventListener("contextmenu", (event) => event.preventDefault());
+    //window.addEventListener("mouseup", this.handleMouseup.bind(this));
+    /*this.inputs.on("Tab", () => {
       this.createMode = !this.createMode;
     });
     this.inputs.on("Enter", () => {
@@ -78,7 +78,10 @@ export class World {
     })
     this.inputs.on("ArrowRight", () => {
       this.runNextPhysicUpdate = true;
-    })
+    })*/ 
+  }
+  addStructure(structure: SoftStructure) { 
+    this.structures.push(structure);
   }
   handleMousedown(event: MouseEvent) {
     event.preventDefault();
@@ -157,14 +160,14 @@ export class World {
 
     if (this.shapeCreator) this.shapeCreator.draw(this.ctx);
 
-    this.ctx.fillStyle = "#0000";
+    /*this.ctx.fillStyle = "#0000";
     this.ctx.strokeStyle = "#000f";
     this.ctx.beginPath();
     this.ctx.moveTo(this.bounds.position.x, this.bounds.position.y);
     this.ctx.lineTo(this.bounds.position.x, this.bounds.position.y + this.bounds.size.y);
     this.ctx.lineTo(this.bounds.position.x + this.bounds.size.x, this.bounds.position.y + this.bounds.size.y);
     this.ctx.lineTo(this.bounds.position.x + this.bounds.size.x, this.bounds.position.y);
-    this.ctx.stroke();
+    this.ctx.stroke();*/
     //this.structures[1].addTorque(.5);
 
     if (!this.createMode || this.runNextPhysicUpdate) {
