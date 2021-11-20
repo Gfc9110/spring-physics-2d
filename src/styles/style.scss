@@ -18,3 +18,39 @@ body {
         font: bold 18px sans-serif;
     }
 }
+
+.mdi {
+    font-size: 24px;
+    margin: 0 10px;
+}
+
+#toolbar {
+    position: fixed;
+    top: calc(100% - 88px);
+    display: flex;
+    justify-content: center;
+    padding: 20px;
+    width: 100%;
+    .toolgroup {
+        display: flex;
+        align-items: center;
+        .tool {
+            width: 48px;
+            height: 48px;
+            background-color: white;
+            border-radius: 50%;
+            border: 1px solid #0002;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 20px;
+            cursor: pointer;
+            .mdi {
+                margin: 0;
+            }
+        }
+    }
+    &.open {
+        left: calc(100% - 64px);
+    }
+}

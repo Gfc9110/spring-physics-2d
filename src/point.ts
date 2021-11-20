@@ -111,6 +111,7 @@ export class Point {
 
   }
   update(delta: number, base?: number) {
+    //console.log(this.position.y)
     if (!this.isFixed) {
       this.velocity.add(this.acceleration.scale(delta));
 
@@ -186,9 +187,9 @@ export class Point {
       this.position = newPosition;
     }
 
-    let bounds = this.structure.world.bounds;
+    //let bounds = this.structure.world.bounds;
 
-    if (this.position.x < bounds.position.x) {
+    /*if (this.position.x < bounds.position.x) {
       this.position.x = bounds.position.x;
       this.velocity.x = 0;
       this.velocity.scale(1 - this.friction);
@@ -206,7 +207,7 @@ export class Point {
       this.position.y = bounds.position.y + bounds.size.y;
       this.velocity.y = 0;
       this.velocity.scale(1 - this.friction);
-    }
+    }*/
 
     this.acceleration = new Vector();
     if (this.isFixed) {

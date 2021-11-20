@@ -7,21 +7,22 @@
       <meta name="viewport"
             content="width=device-width, initial-scale=1.0">
       <link rel="stylesheet"
+            href="//cdn.jsdelivr.net/npm/@mdi/font@6.5.95/css/materialdesignicons.min.css">
+      <link rel="stylesheet"
             href="<%= htmlWebpackPlugin.files.chunks.main.css %>">
       <title>Spring Based 2D Physics Engine test</title>
 </head>
 
 <body>
       <div id="uiText">
-            <span>Spring Based 2D Physics Engine test</span>
-            <span>- Drag with mouse</span>
-            <span>- Drive with A-D</span>
-            <span>- There is a building mode with Tab, still not complete</span>
-            <br>
-            <span id="fps"></span>
-            <br>
-            <span><a href="https://github.com/Gfc9110/spring-physics-2d"
-                     target="_blank">GitHub Repository</a></span>
+            <span>Spring2D Editor
+                  <a class="mdi mdi-github"
+                     href="https://github.com/Gfc9110/spring-physics-2d"
+                     target="_blank">
+                  </a>
+            </span>
+      </div>
+      <div id="toolbar">
       </div>
       <script src="<%= htmlWebpackPlugin.files.chunks.main.entry %>"></script>
 </body>
