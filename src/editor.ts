@@ -1,4 +1,5 @@
 import { Inputs, MouseButton } from "./inputs";
+import { Point } from "./point";
 import { Stats } from "./stats";
 import { Car, SoftBox } from "./structures";
 import { Vector } from "./vector";
@@ -34,7 +35,7 @@ export class Editor {
   draggingCamera = false;
   mainTools: ToolGroup;
   activeTool = EditorTool.DRAG;
-  draggingPoint: import("f:/Programmazione/Web/soft-collisions-physics/src/point").Point;
+  draggingPoint: Point;
   frameTime: number = null;
   mousePosition: Vector;
   constructor() {
