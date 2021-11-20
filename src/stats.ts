@@ -1,13 +1,16 @@
 export class Stats {
   times: number[] = [];
-  constructor() { }
-  ms(ms: number) {
-    this.times.push(ms);
-    if (this.times.length > 1000) {
-      this.times.splice(0, 1);
-    }
+  fpsToCalc: number;
+  constructor() {}
+  get frameTime() {
+    return this.times.reduce((a, b) => a + b) / this.times.length;
   }
-  get fps() {
-    return 1000 / (this.times.reduce((a, b) => a + b) / this.times.length);
+  pushFrameTime(frameTime: number): number {
+    this.times.push(frameTime);
+    if (--this.fpsToCalc > 0) return null;
+    return this.frameTime;
+  }
+  calculateFPS(frameCount: number) {
+    this.fpsToCalc = frameCount;
   }
 }

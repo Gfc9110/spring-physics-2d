@@ -147,9 +147,9 @@ export class World {
     this.structures.forEach(s => s.update(delta));
   }
   animationCallback(time: number) {
-    this.stats.ms(time - this.lastTime);
+    /*this.stats.ms(time - this.lastTime);
     fps.textContent = this.stats.fps.toFixed(2) + " FPS";
-    const deltaTime = Math.min(1 / this.stats.fps, 0.02);
+    const deltaTime = Math.min(1 / this.stats.fps, 0.02);*/
     this.lastTime = time;
 
     this.ctx.fillStyle = "#fff8";
@@ -170,12 +170,12 @@ export class World {
     this.ctx.stroke();*/
     //this.structures[1].addTorque(.5);
 
-    if (!this.createMode || this.runNextPhysicUpdate) {
+    /*if (!this.createMode || this.runNextPhysicUpdate) {
       this.physicUpdate(deltaTime);
     } else {
       this.advancedShapeCreator.draw(this.ctx)
     }
-    this.time += deltaTime;
+    this.time += deltaTime;*/
     this.structures.forEach(s => s.drawOutline(this.ctx));
     this.structures.forEach(s => s.draw(this.ctx));
 

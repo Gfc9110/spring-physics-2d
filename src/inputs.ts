@@ -31,25 +31,25 @@ export class Inputs {
     this.listeners[event].push(callback);
   }
   onMousedown(callback: (button: MouseButton, screenPosition: Vector) => any) {
-    document.body.addEventListener("mousedown", (event) => {
+    window.addEventListener("mousedown", (event) => {
       event.preventDefault();
       callback(event.button, new Vector(event.clientX, event.clientY));
     });
   }
   onMouseup(callback: (button: MouseButton, screenPosition: Vector) => any) {
-    document.body.addEventListener("mouseup", (event) => {
+    window.addEventListener("mouseup", (event) => {
       event.preventDefault();
       callback(event.button, new Vector(event.clientX, event.clientY));
     });
   }
   onMousemove(callback: (screenPosition: Vector, screenOffset: Vector) => any) {
-    document.body.addEventListener("mousemove", (event) => {
+    window.addEventListener("mousemove", (event) => {
       event.preventDefault();
       callback(new Vector(event.clientX, event.clientY), new Vector(event.movementX, event.movementY));
     });
   }
   onMouseWheel(callback: (deltaY: number, screenPosition: Vector) => any) {
-    document.body.addEventListener("wheel", (event) => {
+    window.addEventListener("wheel", (event) => {
       //event.preventDefault();
       callback(event.deltaY, new Vector(event.clientX, event.clientY))
     })
