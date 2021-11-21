@@ -1,3 +1,10 @@
+import { EditorMouseEvent } from "./domHelpers";
+import {
+  CreateTool,
+  DragTool,
+  EditorTool,
+  EditorToolGroup,
+} from "./editorTool";
 import { Inputs, MouseButton } from "./inputs";
 import { Point } from "./point";
 import { Stats } from "./stats";
@@ -16,11 +23,6 @@ export enum EditorState {
   PLAY = 1,
 }
 
-export enum EditorTool {
-  DRAG = 0,
-  CREATE = 1,
-}
-
 export class Editor {
   canvas: HTMLCanvasElement;
   ctx: CanvasRenderingContext2D;
@@ -33,11 +35,10 @@ export class Editor {
   lastTime: number = 0;
   testCar: Car;
   draggingCamera = false;
-  mainTools: ToolGroup;
-  activeTool = EditorTool.DRAG;
   draggingPoint: Point;
   frameTime: number = null;
   mousePosition: Vector;
+  mainTools: EditorToolGroup;
   constructor() {
     this.stats = new Stats();
     this.world = new World();
@@ -72,26 +73,6 @@ export class Editor {
     this.ctx = this.canvas.getContext("2d");
     this.inputs = new Inputs();
 
-    this.mainTools = new ToolGroup();
-    this.mainTools.addTool(
-      new Tool(
-        "cursor-move",
-        (event) => {
-          event.preventDefault();
-          event.stopPropagation();
-          this.activeTool = EditorTool.DRAG;
-          document.body.style.cursor = "auto";
-        },
-        "#EAE4E9"
-      )
-    );
-    /*this.mainTools.addTool(
-      new Tool("vector-square-plus", (event) => {
-        this.activeTool = EditorTool.CREATE;
-        document.body.style.cursor = "crosshair";
-      })
-    );*/
-
     window.requestAnimationFrame(this.render.bind(this));
     this.inputs.onMousedown(this.onMousedown.bind(this));
     this.inputs.onMousemove(this.onMousemove.bind(this));
@@ -108,20 +89,24 @@ export class Editor {
       }
     });
 
+    this.mainTools = new EditorToolGroup(this);
+    this.mainTools.addTools(new DragTool(this), new CreateTool(this));
+    this.mainTools.activateTool(0);
+
     this.stats.calculateFPS(100);
   }
   render(time: number) {
     if (this.frameTime) {
       const deltaTime = this.frameTime / 1000;
       if (this.state == EditorState.PLAY || this.inputs.get("ArrowRight")) {
-        if (this.draggingPoint) {
-          console.log("adding drag force");
+        /*if (this.draggingPoint) {
           this.draggingPoint.addForce(
             this.canvasToWorld(this.mousePosition).sub(
               this.draggingPoint.position
             )
           );
-        }
+        }*/
+        this.mainTools.onUpdate(deltaTime);
         this.world.physicUpdate(deltaTime);
       }
     } else {
@@ -131,16 +116,7 @@ export class Editor {
 
     this.drawWorld();
 
-    if (this.draggingPoint) {
-      this.ctx.strokeStyle = "#000";
-      this.ctx.fillStyle = "#0000";
-      this.ctx.resetTransform();
-      this.ctx.beginPath();
-      const pointCanvas = this.worldToCanvas(this.draggingPoint.position);
-      this.ctx.moveTo(pointCanvas.x, pointCanvas.y);
-      this.ctx.lineTo(this.mousePosition.x, this.mousePosition.y);
-      this.ctx.stroke();
-    }
+    this.mainTools.onDraw();
 
     window.requestAnimationFrame(this.render.bind(this));
   }
@@ -177,50 +153,35 @@ export class Editor {
     this.world.structures.forEach((s) => s.drawOutline(ctx));
     this.world.structures.forEach((s) => s.draw(ctx));
   }
-  onMousedown(button: MouseButton, screenPosition: Vector) {
-    switch (button) {
-      case MouseButton.LEFT: {
-        switch (this.activeTool) {
-          case EditorTool.DRAG: {
-            this.canvasToWorld(screenPosition);
-            this.draggingPoint = this.world.structures
-              .map((s) => s.testPoint(this.canvasToWorld(screenPosition)))
-              .filter((p) => !!p)[0];
-            break;
-          }
-        }
-        break;
-      }
+  onMousedown(event: EditorMouseEvent) {
+    switch (event.button) {
       case MouseButton.MIDDLE: {
         this.draggingCamera = true;
         break;
       }
       default: {
+        this.mainTools.onMousedown(event);
       }
     }
   }
-  onMousemove(screenPosition: Vector, screenOffset: Vector) {
-    this.mousePosition = screenPosition;
+  onMousemove(event: EditorMouseEvent) {
+    this.mousePosition = event.screenPosition;
     if (this.draggingCamera) {
       this.cameraTransform.position.add(
-        screenOffset.scale(-1 / this.cameraTransform.scale)
+        event.screenMovement.copy().scale(-1 / this.cameraTransform.scale)
       );
+    } else {
+      this.mainTools.onMousemove(event);
     }
   }
-  onMouseup(button: MouseButton, screenPosition: Vector) {
-    switch (button) {
+  onMouseup(event: EditorMouseEvent) {
+    switch (event.button) {
       case MouseButton.MIDDLE: {
         this.draggingCamera = false;
         break;
       }
-      case MouseButton.LEFT: {
-        switch (this.activeTool) {
-          case EditorTool.DRAG: {
-            this.draggingPoint = null;
-          }
-        }
-      }
       default: {
+        this.mainTools.onMouseup(event);
       }
     }
   }
@@ -255,42 +216,4 @@ export class Editor {
       new Vector(this.canvas.width / 2, this.canvas.height / 2)
     );
   }
-}
-
-export class ToolGroup {
-  parent = document.querySelector("#toolbar");
-  element: HTMLDivElement;
-  tools: Tool[] = [];
-  constructor() {
-    this.element = classEl("toolgroup");
-    this.parent.appendChild(this.element);
-  }
-  addTool(tool: Tool) {
-    this.element.appendChild(tool.element);
-    this.tools.push(tool);
-  }
-}
-
-export class Tool {
-  element: HTMLDivElement;
-  constructor(
-    iconName: string,
-    clickCallback: (event: PointerEvent) => any,
-    color = "#fff"
-  ) {
-    this.element = classEl("tool");
-    this.element.style.background = color;
-    this.element.appendChild(iconEl(iconName));
-    this.element.addEventListener("click", clickCallback);
-  }
-}
-
-function classEl(className: string): HTMLDivElement {
-  const el = document.createElement("div");
-  el.className = className;
-  return el;
-}
-
-function iconEl(iconName: string): HTMLDivElement {
-  return classEl(`mdi mdi-${iconName}`);
 }

@@ -1,10 +1,10 @@
+import { EditorMouseEvent } from "./domHelpers";
 import { Vector } from "./vector";
-
 
 export enum MouseButton {
   LEFT = 0,
   MIDDLE = 1,
-  RIGHT = 2
+  RIGHT = 2,
 }
 
 export class Inputs {
@@ -16,7 +16,7 @@ export class Inputs {
   }
   onKeyDown(event: KeyboardEvent) {
     event.preventDefault();
-    this.listeners[event.code]?.forEach(c => c(event));
+    this.listeners[event.code]?.forEach((c) => c(event));
     this._inputs[event.code] = true;
   }
   onKeyUp(event: KeyboardEvent) {
@@ -30,28 +30,28 @@ export class Inputs {
     this.listeners[event] = this.listeners[event] || [];
     this.listeners[event].push(callback);
   }
-  onMousedown(callback: (button: MouseButton, screenPosition: Vector) => any) {
+  onMousedown(callback: (event: EditorMouseEvent) => any) {
     window.addEventListener("mousedown", (event) => {
       event.preventDefault();
-      callback(event.button, new Vector(event.clientX, event.clientY));
+      callback(new EditorMouseEvent(event));
     });
   }
-  onMouseup(callback: (button: MouseButton, screenPosition: Vector) => any) {
+  onMouseup(callback: (event: EditorMouseEvent) => any) {
     window.addEventListener("mouseup", (event) => {
       event.preventDefault();
-      callback(event.button, new Vector(event.clientX, event.clientY));
+      callback(new EditorMouseEvent(event));
     });
   }
-  onMousemove(callback: (screenPosition: Vector, screenOffset: Vector) => any) {
+  onMousemove(callback: (event: EditorMouseEvent) => any) {
     window.addEventListener("mousemove", (event) => {
       event.preventDefault();
-      callback(new Vector(event.clientX, event.clientY), new Vector(event.movementX, event.movementY));
+      callback(new EditorMouseEvent(event));
     });
   }
   onMouseWheel(callback: (deltaY: number, screenPosition: Vector) => any) {
     window.addEventListener("wheel", (event) => {
       //event.preventDefault();
-      callback(event.deltaY, new Vector(event.clientX, event.clientY))
-    })
+      callback(event.deltaY, new Vector(event.clientX, event.clientY));
+    });
   }
 }
