@@ -11,6 +11,12 @@ export function iconEl(iconName: string): HTMLDivElement {
   return classEl(`mdi mdi-${iconName}`);
 }
 
+export function toolLabel(labelVal: string) {
+  let el = classEl("label");
+  el.textContent = labelVal;
+  return el;
+}
+
 export class EditorMouseEvent {
   screenPosition: Vector;
   screenMovement: Vector;

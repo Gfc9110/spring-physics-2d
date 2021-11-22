@@ -1,4 +1,4 @@
-import { classEl, EditorMouseEvent, iconEl } from "./domHelpers";
+import { classEl, EditorMouseEvent, iconEl, toolLabel } from "./domHelpers";
 import { Editor } from "./editor";
 import { MouseButton } from "./inputs";
 import { Point } from "./point";
@@ -7,6 +7,7 @@ import { Vector } from "./vector";
 export enum EditorToolType {
   DRAG = "cursor-move",
   CREATE = "vector-square-plus",
+  SELECT = "cursor-default-click-outline",
 }
 
 export class EditorToolGroup {
@@ -46,6 +47,7 @@ export class EditorToolGroup {
   }
   deactivateTools(event: EditorMouseEvent) {
     this.tools.forEach((t) => t.deactivate(event));
+    this.activeTool = null;
   }
   onMousedown(event: EditorMouseEvent) {
     this.activeTool?.onMousedown(event);
@@ -67,9 +69,16 @@ export class EditorToolGroup {
 export class EditorTool {
   element: HTMLDivElement;
   active: boolean;
-  constructor(public editor: Editor, type: EditorToolType) {
+  constructor(
+    public editor: Editor,
+    type: EditorToolType,
+    label: string = null
+  ) {
     this.element = classEl("tool");
     this.element.appendChild(iconEl(type));
+    if (label) {
+      this.element.appendChild(toolLabel(label));
+    }
   }
   deactivate(event: EditorMouseEvent) {
     this.active = false;
@@ -97,7 +106,7 @@ export class EditorTool {
 export class DragTool extends EditorTool {
   draggingPoint: Point;
   constructor(editor: Editor) {
-    super(editor, EditorToolType.DRAG);
+    super(editor, EditorToolType.DRAG, "Drag");
   }
   onMousedown(event: EditorMouseEvent) {
     switch (event.button) {
@@ -144,11 +153,17 @@ export class DragTool extends EditorTool {
   }
 }
 
+export class SelectTool extends EditorTool {
+  constructor(editor: Editor) {
+    super(editor, EditorToolType.SELECT, "Select");
+  }
+}
+
 export class CreateTool extends EditorTool {
   gridSize = 25;
   gridHalfSide = 20;
   constructor(editor: Editor) {
-    super(editor, EditorToolType.CREATE);
+    super(editor, EditorToolType.CREATE, "Add Structure");
   }
   onDraw() {
     this.editor.ctx.strokeStyle = "#0000";
@@ -160,10 +175,6 @@ export class CreateTool extends EditorTool {
     worldCenter.x = Math.round(worldCenter.x);
     worldCenter.y = Math.round(worldCenter.y);
     worldCenter.scale(this.gridSize);
-    let center = new Vector(
-      Math.round(this.editor.mousePosition.x / this.gridSize) * this.gridSize,
-      Math.round(this.editor.mousePosition.y / this.gridSize) * this.gridSize
-    );
     for (let x = -this.gridHalfSide; x <= this.gridHalfSide; x++) {
       for (let y = -this.gridHalfSide; y <= this.gridHalfSide; y++) {
         let pos = worldCenter.copy().add(new Vector(x, y).scale(this.gridSize));

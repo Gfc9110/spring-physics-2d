@@ -4,6 +4,7 @@ import {
   DragTool,
   EditorTool,
   EditorToolGroup,
+  SelectTool,
 } from "./editorTool";
 import { Inputs, MouseButton } from "./inputs";
 import { Point } from "./point";
@@ -90,10 +91,14 @@ export class Editor {
     });
 
     this.mainTools = new EditorToolGroup(this);
-    this.mainTools.addTools(new DragTool(this), new CreateTool(this));
-    this.mainTools.activateTool(0);
+    this.mainTools.addTools(
+      new SelectTool(this),
+      new DragTool(this),
+      new CreateTool(this)
+    );
+    this.mainTools.activateTool(1);
 
-    this.stats.calculateFPS(100);
+    this.stats.calculateFPS(250);
   }
   render(time: number) {
     if (this.frameTime) {

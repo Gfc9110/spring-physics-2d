@@ -3,9 +3,10 @@
 @import "modules/variables";
 @import "modules/base";
 
-@import url("https://fonts.googleapis.com/css2?family=Roboto+Mono&display=swap");
+@import url("https://fonts.googleapis.com/css2?family=Roboto+Mono:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;1,100;1,200;1,300;1,400;1,500;1,600;1,700&display=swap");
 body {
     margin: 0;
+    font-family: "Roboto Mono", monospace;
 }
 * {
     box-sizing: border-box;
@@ -15,17 +16,18 @@ body {
     position: fixed;
     left: 32px;
     top: 20px;
+
+    .mdi {
+        font-size: 24px;
+        margin: 0 10px;
+    }
     span {
         display: flex;
         align-items: center;
-        font: bold 18px sans-serif;
+        font-size: 18px;
+        font-weight: 500;
     }
 }
-
-/*.mdi {
-    font-size: 24px;
-    margin: 0 10px;
-}*/
 
 /*#toolbar {
     position: fixed;
@@ -84,8 +86,12 @@ body {
             justify-content: center;
             margin-bottom: 2px;
             border-radius: 8px;
+            position: relative;
             &:hover {
                 background-color: #333;
+                .label {
+                    transform: translateY(-50%) scaleX(100%);
+                }
             }
             &.active-tool {
                 background-color: #888;
@@ -96,6 +102,22 @@ body {
             .mdi {
                 font-size: 24px;
                 color: #ddd;
+            }
+            .label {
+                border-radius: 6px;
+                background-color: #222;
+                color: white;
+                padding: 2px 6px 2px 8px;
+                font-size: 16px;
+                position: absolute;
+                text-align: right;
+                top: 50%;
+                transform-origin: 0 50%;
+                transform: translateY(-50%) scaleX(0);
+                left: calc(100% - 1px);
+                transition: transform 0.1s;
+                z-index: -1;
+                white-space: nowrap;
             }
         }
     }

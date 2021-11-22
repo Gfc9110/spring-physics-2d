@@ -3,7 +3,7 @@ export class Stats {
   fpsToCalc: number;
   constructor() {}
   get frameTime() {
-    return this.times.reduce((a, b) => a + b) / this.times.length;
+    return this.times.sort((a, b) => a - b)[Math.round(this.times.length / 2)];
   }
   pushFrameTime(frameTime: number): number {
     this.times.push(frameTime);
