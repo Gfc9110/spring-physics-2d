@@ -2,7 +2,6 @@ import { EditorMouseEvent } from "./domHelpers";
 import {
   CreateTool,
   DragTool,
-  EditorTool,
   EditorToolGroup,
   SelectTool,
 } from "./editorTool";

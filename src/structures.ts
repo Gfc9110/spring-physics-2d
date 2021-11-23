@@ -25,6 +25,7 @@ export class SoftStructure {
   normalsRecalculated = false;
   random: number;
   gravityScale: number = 1;
+  shapes: Shape[] = [];
   testPoint(position: Vector, maxDistanceSq: number = mousePickDistancesq) {
     let p = this.points
       .filter((p) => p.testPoint(position, maxDistanceSq))
@@ -33,10 +34,6 @@ export class SoftStructure {
           a.position.distanceSq(position) - b.position.distanceSq(position)
       );
     return p[0];
-    for (let i = 0; i < this.points.length; i++) {
-      if (this.points[i].testPoint(position, maxDistanceSq))
-        return this.points[i];
-    }
   }
   springs: Spring[] = [];
   points: Point[] = [];
@@ -156,6 +153,43 @@ export class SoftStructure {
     }
     return outlines.map((pts) => pts.map((p) => p.position));
   }
+}
+
+export class Shape {
+  constructor(
+    public structure: SoftStructure,
+    public points: Point[],
+    public springs: Spring[]
+  ) {}
+  get center() {
+    let center = new Vector();
+    this.points.forEach((p) => center.add(p.position));
+    return center.scale(1 / this.points.length);
+  }
+  get boundingBox(): BoundingBox {
+    let minX = Infinity;
+    let maxX = -Infinity;
+    let minY = Infinity;
+    let maxY = -Infinity;
+    this.points.forEach((p) => {
+      if (p.position.x < minX) {
+        minX = p.position.x;
+      }
+      if (p.position.x > maxX) {
+        maxX = p.position.x;
+      }
+      if (p.position.y < minY) {
+        minY = p.position.y;
+      }
+      if (p.position.y > maxY) {
+        maxY = p.position.y;
+      }
+    });
+    return new BoundingBox(
+      new Vector(minX, minY),
+      new Vector(maxX - minX, maxY - minY)
+    );
+  }
   isPositionInside(position: Vector) {
     let testSegment = new Segment(
       position,
@@ -168,166 +202,6 @@ export class SoftStructure {
         2 ==
       1
     );
-  }
-  recalculateNormals() {
-    this.springs
-      .filter((s) => s.isSide)
-      .forEach((s) => {
-        if (this.isPositionInside(s.center.add(s.segment.normal))) {
-          console.log(this);
-          console.log("invertingNormal");
-          //s.invertNormals();
-        }
-      });
-  }
-}
-
-export class SoftCircle extends SoftStructure {
-  constructor(
-    world: World,
-    center: Vector,
-    radius: number = 50,
-    sides: number = 8,
-    stiffness = 500,
-    centerFixed = false,
-    mass = 1
-  ) {
-    super(world);
-    const angle = (Math.PI * 2) / sides;
-    let centerPoint = new Point(this, center.copy(), mass, centerFixed);
-    this.points.push(centerPoint);
-    let lastPoint;
-    let firstPoint;
-    for (let i = 0; i < sides; i++) {
-      const point = new Point(
-        this,
-        center
-          .copy()
-          .add(
-            new Vector(
-              Math.cos(angle * i) * radius,
-              Math.sin(angle * i) * radius
-            )
-          ),
-        mass,
-        false,
-        true
-      );
-      if (i == 0) firstPoint = point;
-      this.points.push(point);
-      this.springs.push(new Spring(centerPoint, point, stiffness));
-      if (lastPoint) {
-        this.springs.push(new Spring(point, lastPoint, stiffness, null, true));
-      }
-      if (i == sides - 1) {
-        this.springs.push(new Spring(firstPoint, point, stiffness, null, true));
-      }
-      lastPoint = point;
-    }
-  }
-  update(delta: number) {
-    //this.centerPoint.addForce(new Vector(1, 0))
-    //this.addTorque(0.001);
-    //console.log(this.center);
-    super.update(delta);
-  }
-}
-
-export class Cord extends SoftStructure {
-  constructor(
-    world: World,
-    startPosition: Vector,
-    endPosition: Vector,
-    steps: number = 30,
-    startFixed = false,
-    endFixed = false,
-    tension = 5,
-    width = 5
-  ) {
-    super(world);
-    const step = endPosition
-      .copy()
-      .sub(startPosition)
-      .scale(1 / steps);
-    const startPoint = new Point(
-      this,
-      startPosition.copy(),
-      1,
-      startFixed,
-      true
-    );
-    const endPoint = new Point(this, endPosition, 1, endFixed, true);
-    this.points.push(endPoint, startPoint);
-    const up = step
-      .copy()
-      .rotate(Math.PI / 2)
-      .normalize()
-      .scale(width / 2);
-    let lastUpPoint = startPoint;
-    let lastDownPoint = startPoint;
-    for (let i = 1; i < steps; i++) {
-      const upPoint = new Point(
-        this,
-        startPosition.add(step).copy().add(up),
-        1,
-        false,
-        true
-      );
-      const downPoint = new Point(
-        this,
-        startPosition.copy().sub(up),
-        1,
-        false,
-        true
-      );
-
-      this.springs.push(
-        new Spring(lastUpPoint, upPoint, tension, null, true, tension / 100)
-      );
-      this.springs.push(
-        new Spring(downPoint, lastDownPoint, tension, null, true, tension / 100)
-      );
-      this.springs.push(
-        new Spring(downPoint, upPoint, tension, null, false, tension / 100)
-      );
-
-      if (i > 1) {
-        this.springs.push(
-          new Spring(
-            downPoint,
-            lastUpPoint,
-            tension,
-            null,
-            false,
-            tension / 100
-          )
-        );
-        this.springs.push(
-          new Spring(
-            upPoint,
-            lastDownPoint,
-            tension,
-            null,
-            false,
-            tension / 100
-          )
-        );
-      }
-
-      if (i == steps - 1) {
-        this.springs.push(
-          new Spring(upPoint, endPoint, tension, null, true, tension / 100)
-        );
-        this.springs.push(
-          new Spring(endPoint, downPoint, tension, null, true, tension / 100)
-        );
-      }
-
-      this.points.push(upPoint, downPoint);
-
-      lastUpPoint = upPoint;
-      lastDownPoint = downPoint;
-    }
   }
 }
 
@@ -386,143 +260,19 @@ export class SoftBox extends SoftStructure {
 
     this.springs.push(new Spring(bottomLeft, topRight, stiffness, null));
     this.springs.push(new Spring(topLeft, bottomRight, stiffness, null));
-  }
-}
-
-export class JumpingBox extends SoftBox {
-  constructor(
-    world: World,
-    center: Vector,
-    size: Vector,
-    stiffness = 500,
-    fixed = false,
-    mass = 1
-  ) {
-    super(world, center, size, stiffness, fixed, mass);
-    this.strokeStyle = "#0000";
-  }
-  update(delta: number) {
-    this.springs[1].target = this.world.inputs.get("KeyS")
-      ? this.size.y / 3
-      : this.size.y * 3;
-    this.springs[3].target = this.world.inputs.get("KeyS")
-      ? this.size.y / 3
-      : this.size.y * 3;
-    this.fillStyle = lerpColor(
-      "#ff6644",
-      "#55ccs55",
-      Math.pow(
-        (this.springs[1].distance - this.size.y / 3) /
-          (this.size.y * 3 - this.size.y / 3),
-        2
-      )
-    );
-    super.update(delta);
-  }
-}
-
-export class OpenDonut extends SoftStructure {
-  constructor(
-    world: World,
-    center: Vector,
-    r: number = 80,
-    R: number = 100,
-    sides = 10
-  ) {
-    super(world);
-    const angle = (Math.PI * 2) / (sides + 2);
-    let temp = new Vector(r, 0);
-    let internalPoints: Point[] = [];
-    for (let i = 0; i < sides; i++) {
-      this.points.push(
-        (internalPoints[i] = new Point(
-          this,
-          center.copy().add(temp.rotate(angle)),
-          1,
-          false,
-          true
-        ))
-      );
-      if (i > 0) {
-        this.springs.push(
-          new Spring(internalPoints[i - 1], internalPoints[i], 1000, null, true)
-        );
-      }
-      if (i == sides - 1) {
-        this.springs.push(
-          new Spring(internalPoints[0], internalPoints[i], 1000, null, false)
-        );
-      }
-    }
-    let externalPoints: Point[] = [];
-    temp.scale(R / r);
-    for (let i = 0; i < sides; i++) {
-      this.points.push(
-        (externalPoints[i] = new Point(
-          this,
-          center.copy().add(temp),
-          1,
-          false,
-          true
-        ))
-      );
-      temp.rotate(-angle);
-      const isExt = i == 0 || i == sides - 1;
-      this.springs.push(
-        new Spring(
-          externalPoints[i],
-          internalPoints[sides - i - 1],
-          1000,
-          null,
-          isExt
-        )
-      );
-      if (!isExt) {
-        this.springs.push(
-          new Spring(
-            externalPoints[i],
-            internalPoints[sides - i - 2],
-            1000,
-            null,
-            isExt
-          )
-        );
-        this.springs.push(
-          new Spring(
-            externalPoints[i],
-            internalPoints[sides - i],
-            1000,
-            null,
-            isExt
-          )
-        );
-      }
-      if (i > 0) {
-        this.springs.push(
-          new Spring(externalPoints[i - 1], externalPoints[i], 1000, null, true)
-        );
-      }
-      if (i == sides - 1) {
-        this.springs.push(
-          new Spring(externalPoints[0], externalPoints[i], 1000, null, false)
-        );
-        this.springs.push(
-          new Spring(externalPoints[0], internalPoints[0], 1000, null, false)
-        );
-        this.springs.push(
-          new Spring(externalPoints[i], internalPoints[i], 1000, null, false)
-        );
-      }
-    }
+    this.shapes.push(new Shape(this, [...this.points], [...this.springs]));
   }
 }
 
 export class Car extends SoftStructure {
-  bodyPoints: Point[];
-  leftWheelPoints: Point[];
-  rightWheelPoints: Point[];
+  bodyPoints: Point[] = [];
+  leftWheelPoints: Point[] = [];
+  rightWheelPoints: Point[] = [];
   rightWheelAnchorPoint: Point;
   leftWheelAnchorPoint: Point;
+  bodySprings: Spring[] = [];
+  leftWheelSprings: Spring[] = [];
+  rightWheelSprings: Spring[] = [];
   constructor(
     world: World,
     center: Vector,
@@ -602,7 +352,7 @@ export class Car extends SoftStructure {
     ); // 5
 
     for (let i = 1; i < this.bodyPoints.length; i++) {
-      this.springs.push(
+      this.bodySprings.push(
         new Spring(
           this.bodyPoints[i],
           this.bodyPoints[i - 1],
@@ -612,30 +362,40 @@ export class Car extends SoftStructure {
         )
       );
       if (i == this.bodyPoints.length - 1) {
-        this.springs.push(
+        this.bodySprings.push(
           new Spring(this.bodyPoints[0], this.bodyPoints[i], 10000, null, true)
         );
       }
     }
 
-    this.springs.push(
+    this.bodySprings.push(
       new Spring(this.bodyPoints[0], this.bodyPoints[2], 10000)
     );
-    this.springs.push(
+    this.bodySprings.push(
       new Spring(this.bodyPoints[1], this.bodyPoints[5], 10000)
     );
 
-    this.springs.push(new Spring(this.bodyPoints[3], this.bodyPoints[1], 5000));
-    this.springs.push(new Spring(this.bodyPoints[4], this.bodyPoints[0], 5000));
+    this.bodySprings.push(
+      new Spring(this.bodyPoints[3], this.bodyPoints[1], 5000)
+    );
+    this.bodySprings.push(
+      new Spring(this.bodyPoints[4], this.bodyPoints[0], 5000)
+    );
 
-    this.springs.push(new Spring(this.bodyPoints[3], this.bodyPoints[0], 5000));
-    this.springs.push(new Spring(this.bodyPoints[4], this.bodyPoints[1], 5000));
+    this.bodySprings.push(
+      new Spring(this.bodyPoints[3], this.bodyPoints[0], 5000)
+    );
+    this.bodySprings.push(
+      new Spring(this.bodyPoints[4], this.bodyPoints[1], 5000)
+    );
+
+    this.springs.push(...this.bodySprings);
 
     this.points.push(...this.bodyPoints);
 
-    //LEFT WHEEL
+    this.shapes.push(new Shape(this, this.bodyPoints, this.bodySprings));
 
-    this.leftWheelPoints = [];
+    //LEFT WHEEL
     let angle = (Math.PI * 2) / wheelStep;
     let offset = new Vector(wheelRadius, 0);
     for (let i = 0; i < wheelStep; i++) {
@@ -649,11 +409,11 @@ export class Car extends SoftStructure {
           traction
         )
       );
-      this.springs.push(
+      this.leftWheelSprings.push(
         new Spring(this.leftWheelPoints[i], this.leftWheelAnchorPoint, 1000)
       );
       if (i > 0) {
-        this.springs.push(
+        this.leftWheelSprings.push(
           new Spring(
             this.leftWheelPoints[i],
             this.leftWheelPoints[i - 1],
@@ -664,17 +424,17 @@ export class Car extends SoftStructure {
         );
       }
       if (i > 1) {
-        this.springs.push(
+        this.leftWheelSprings.push(
           new Spring(this.leftWheelPoints[i], this.leftWheelPoints[i - 2], 500)
         );
       }
       if (i == wheelStep - 2) {
-        this.springs.push(
+        this.leftWheelSprings.push(
           new Spring(this.leftWheelPoints[0], this.leftWheelPoints[i], 500)
         );
       }
       if (i == wheelStep - 1) {
-        this.springs.push(
+        this.leftWheelSprings.push(
           new Spring(
             this.leftWheelPoints[0],
             this.leftWheelPoints[i],
@@ -683,16 +443,18 @@ export class Car extends SoftStructure {
             true
           )
         );
-        this.springs.push(
+        this.leftWheelSprings.push(
           new Spring(this.leftWheelPoints[1], this.leftWheelPoints[i], 500)
         );
       }
     }
     this.points.push(...this.leftWheelPoints);
+    this.springs.push(...this.leftWheelSprings);
+    this.shapes.push(
+      new Shape(this, this.leftWheelPoints, this.leftWheelSprings)
+    );
 
     //RIGHT WHEEL
-
-    this.rightWheelPoints = [];
     //let angle = Math.PI * 2 / wheelStep;
     //let offset = new Vector(wheelRadius, 0)
     for (let i = 0; i < wheelStep; i++) {
@@ -706,11 +468,11 @@ export class Car extends SoftStructure {
           traction
         )
       );
-      this.springs.push(
+      this.rightWheelSprings.push(
         new Spring(this.rightWheelPoints[i], this.rightWheelAnchorPoint, 1000)
       );
       if (i > 0) {
-        this.springs.push(
+        this.rightWheelSprings.push(
           new Spring(
             this.rightWheelPoints[i],
             this.rightWheelPoints[i - 1],
@@ -721,17 +483,17 @@ export class Car extends SoftStructure {
         );
       }
       if (i > 1) {
-        this.springs.push(
+        this.rightWheelSprings.push(
           new Spring(this.rightWheelPoints[i], this.rightWheelPoints[i - 2], 50)
         );
       }
       if (i == wheelStep - 2) {
-        this.springs.push(
+        this.rightWheelSprings.push(
           new Spring(this.rightWheelPoints[0], this.rightWheelPoints[i], 500)
         );
       }
       if (i == wheelStep - 1) {
-        this.springs.push(
+        this.rightWheelSprings.push(
           new Spring(
             this.rightWheelPoints[0],
             this.rightWheelPoints[i],
@@ -740,12 +502,16 @@ export class Car extends SoftStructure {
             true
           )
         );
-        this.springs.push(
+        this.rightWheelSprings.push(
           new Spring(this.rightWheelPoints[1], this.rightWheelPoints[i], 500)
         );
       }
     }
     this.points.push(...this.rightWheelPoints);
+    this.springs.push(...this.rightWheelSprings);
+    this.shapes.push(
+      new Shape(this, this.rightWheelPoints, this.rightWheelSprings)
+    );
   }
   update(delta: number) {
     /*if (this.world.inputs.get("KeyD")) {

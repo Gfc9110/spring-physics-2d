@@ -2,6 +2,7 @@ import { classEl, EditorMouseEvent, iconEl, toolLabel } from "./domHelpers";
 import { Editor } from "./editor";
 import { MouseButton } from "./inputs";
 import { Point } from "./point";
+import { SoftStructure } from "./structures";
 import { Vector } from "./vector";
 
 export enum EditorToolType {
