@@ -101,13 +101,6 @@ export class Editor {
   }
   render(time: number) {
     if (this.state == EditorState.PLAY || this.inputs.get("ArrowRight")) {
-      /*if (this.draggingPoint) {
-          this.draggingPoint.addForce(
-            this.canvasToWorld(this.mousePosition).sub(
-              this.draggingPoint.position
-            )
-          );
-        }*/
       this.mainTools.onUpdate(0.005);
       this.world.physicUpdate(0.005);
     }
