@@ -147,6 +147,7 @@ export class Editor {
     this.world.structures.forEach((s) => s.draw(ctx));
   }
   onMousedown(event: EditorMouseEvent) {
+    this.mousePosition = event.screenPosition;
     switch (event.button) {
       case MouseButton.MIDDLE: {
         this.draggingCamera = true;
@@ -168,6 +169,7 @@ export class Editor {
     }
   }
   onMouseup(event: EditorMouseEvent) {
+    this.mousePosition = event.screenPosition;
     switch (event.button) {
       case MouseButton.MIDDLE: {
         this.draggingCamera = false;
