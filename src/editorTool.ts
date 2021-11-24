@@ -2,13 +2,14 @@ import { classEl, EditorMouseEvent, iconEl, toolLabel } from "./domHelpers";
 import { Editor } from "./editor";
 import { MouseButton } from "./inputs";
 import { Point } from "./point";
-import { SoftStructure } from "./structures";
+import { SoftBox, SoftStructure } from "./structures";
 import { Vector } from "./vector";
 
 export enum EditorToolType {
   DRAG = "cursor-move",
   CREATE = "vector-square-plus",
   SELECT = "cursor-default-click-outline",
+  BOX = "shape-square-plus",
 }
 
 export class EditorToolGroup {
@@ -191,6 +192,47 @@ export class CreateTool extends EditorTool {
           this.editor.ctx.fillRect(pos.x - 1, pos.y - 1, 3, 3);
         }
       }
+    }
+  }
+}
+
+export class BoxTool extends EditorTool {
+  screenStart: Vector;
+  constructor(editor: Editor) {
+    super(editor, EditorToolType.BOX, "Add Box");
+  }
+  onMousedown(event: EditorMouseEvent) {
+    this.screenStart = event.screenPosition;
+  }
+  onMouseup(event: EditorMouseEvent) {
+    let worldStart = this.editor.canvasToWorld(this.screenStart);
+    let worldEnd = this.editor.canvasToWorld(event.screenPosition);
+    this.editor.world.structures.push(
+      new SoftBox(
+        this.editor.world,
+        new Vector(
+          (worldStart.x + worldEnd.x) / 2,
+          (worldStart.y + worldEnd.y) / 2
+        ),
+        new Vector(worldEnd.x - worldStart.x, worldEnd.y - worldStart.y),
+        2000,
+        false,
+        6
+      )
+    );
+    this.screenStart = null;
+  }
+  onDraw() {
+    if (this.screenStart) {
+      this.editor.ctx.resetTransform();
+      this.editor.ctx.strokeStyle = "#0008";
+      this.editor.ctx.fillStyle = "#0000";
+      this.editor.ctx.strokeRect(
+        this.screenStart.x,
+        this.screenStart.y,
+        this.editor.mousePosition.x - this.screenStart.x,
+        this.editor.mousePosition.y - this.screenStart.y
+      );
     }
   }
 }

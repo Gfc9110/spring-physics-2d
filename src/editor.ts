@@ -1,5 +1,6 @@
 import { EditorMouseEvent } from "./domHelpers";
 import {
+  BoxTool,
   CreateTool,
   DragTool,
   EditorToolGroup,
@@ -93,6 +94,7 @@ export class Editor {
     this.mainTools.addTools(
       new SelectTool(this),
       new DragTool(this),
+      new BoxTool(this),
       new CreateTool(this)
     );
     this.mainTools.activateTool(1);
