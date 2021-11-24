@@ -71,7 +71,7 @@ export class Editor {
       scale: 1,
     };
     this.ctx = this.canvas.getContext("2d");
-    this.inputs = new Inputs();
+    this.inputs = new Inputs(this);
 
     window.requestAnimationFrame(this.render.bind(this));
     this.inputs.onMousedown(this.onMousedown.bind(this));
