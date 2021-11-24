@@ -1,4 +1,5 @@
 import { EditorMouseEvent } from "./domHelpers";
+import { Editor } from "./editor";
 import { Vector } from "./vector";
 
 export enum MouseButton {
@@ -10,7 +11,7 @@ export enum MouseButton {
 export class Inputs {
   listeners: { [event: string]: ((event: KeyboardEvent) => any)[] } = {};
   private _inputs: { [code: string]: boolean } = {};
-  constructor() {
+  constructor(public editor: Editor) {
     document.addEventListener("keydown", this.onKeyDown.bind(this));
     document.addEventListener("keyup", this.onKeyUp.bind(this));
   }
@@ -49,8 +50,8 @@ export class Inputs {
     });
   }
   onMouseWheel(callback: (deltaY: number, screenPosition: Vector) => any) {
-    window.addEventListener("wheel", (event) => {
-      //event.preventDefault();
+    this.editor.canvas.addEventListener("wheel", (event) => {
+      event.preventDefault();
       callback(event.deltaY, new Vector(event.clientX, event.clientY));
     });
   }
