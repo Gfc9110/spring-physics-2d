@@ -32,19 +32,19 @@ export class Inputs {
     this.listeners[event].push(callback);
   }
   onMousedown(callback: (event: EditorMouseEvent) => any) {
-    window.addEventListener("mousedown", (event) => {
+    window.addEventListener("pointerdown", (event) => {
       event.preventDefault();
       callback(new EditorMouseEvent(event));
     });
   }
   onMouseup(callback: (event: EditorMouseEvent) => any) {
-    window.addEventListener("mouseup", (event) => {
+    window.addEventListener("pointerup", (event) => {
       event.preventDefault();
       callback(new EditorMouseEvent(event));
     });
   }
   onMousemove(callback: (event: EditorMouseEvent) => any) {
-    window.addEventListener("mousemove", (event) => {
+    window.addEventListener("pointermove", (event) => {
       event.preventDefault();
       callback(new EditorMouseEvent(event));
     });
