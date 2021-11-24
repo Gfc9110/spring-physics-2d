@@ -100,23 +100,17 @@ export class Editor {
     this.stats.calculateFPS(250);
   }
   render(time: number) {
-    if (this.frameTime) {
-      const deltaTime = this.frameTime / 1000;
-      if (this.state == EditorState.PLAY || this.inputs.get("ArrowRight")) {
-        /*if (this.draggingPoint) {
+    if (this.state == EditorState.PLAY || this.inputs.get("ArrowRight")) {
+      /*if (this.draggingPoint) {
           this.draggingPoint.addForce(
             this.canvasToWorld(this.mousePosition).sub(
               this.draggingPoint.position
             )
           );
         }*/
-        this.mainTools.onUpdate(deltaTime);
-        this.world.physicUpdate(deltaTime);
-      }
-    } else {
-      this.frameTime = this.stats.pushFrameTime(time - this.lastTime);
+      this.mainTools.onUpdate(0.005);
+      this.world.physicUpdate(0.005);
     }
-    this.lastTime = time;
 
     this.drawWorld();
 

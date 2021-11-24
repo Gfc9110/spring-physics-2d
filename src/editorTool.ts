@@ -162,11 +162,14 @@ export class SelectTool extends EditorTool {
 
 export class CreateTool extends EditorTool {
   gridSize = 25;
-  gridHalfSide = 20;
+  gridHalfSide = 30;
   constructor(editor: Editor) {
     super(editor, EditorToolType.CREATE, "Add Structure");
   }
   onDraw() {
+    this.gridSize =
+      50 /
+      Math.pow(2, Math.floor(Math.log2(this.editor.cameraTransform.scale)));
     this.editor.ctx.strokeStyle = "#0000";
     this.editor.ctx.fillStyle = "#000f";
     this.editor.ctx.resetTransform();
@@ -176,14 +179,16 @@ export class CreateTool extends EditorTool {
     worldCenter.x = Math.round(worldCenter.x);
     worldCenter.y = Math.round(worldCenter.y);
     worldCenter.scale(this.gridSize);
+    this.editor.ctx.fillStyle = "#0004";
+    const maxDistance = Math.pow(this.gridSize * this.gridHalfSide, 2);
     for (let x = -this.gridHalfSide; x <= this.gridHalfSide; x++) {
       for (let y = -this.gridHalfSide; y <= this.gridHalfSide; y++) {
         let pos = worldCenter.copy().add(new Vector(x, y).scale(this.gridSize));
-        let dist = worldCenter.distance(pos);
-        if (dist < this.gridSize * this.gridHalfSide) {
+        let dist = worldCenter.distanceSq(pos);
+        if (dist < maxDistance) {
           pos = this.editor.worldToCanvas(pos);
-          this.editor.ctx.fillStyle = `rgba(0,0,0,${20 / dist} )`;
-          this.editor.ctx.fillRect(pos.x - 2, pos.y - 2, 5, 5);
+          //this.editor.ctx.fillStyle = `rgba(0,0,0,${50000 / dist} )`;
+          this.editor.ctx.fillRect(pos.x - 1, pos.y - 1, 3, 3);
         }
       }
     }
