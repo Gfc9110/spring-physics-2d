@@ -63,7 +63,8 @@ export class Editor {
         new Vector(this.canvas.width, 50),
         100,
         true,
-        1
+        1,
+        0.5
       )
     );
     this.cameraTransform = {

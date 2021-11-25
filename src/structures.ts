@@ -213,7 +213,8 @@ export class SoftBox extends SoftStructure {
     size: Vector,
     stiffness = 500,
     fixed = false,
-    mass = 1
+    mass = 1,
+    friction = 0.2
   ) {
     super(world);
     this.size = size;
@@ -222,7 +223,8 @@ export class SoftBox extends SoftStructure {
       center.copy().add(new Vector(-size.x / 2, -size.y / 2)),
       mass,
       fixed,
-      true
+      true,
+      friction
     );
 
     const topRight = new Point(
@@ -230,7 +232,8 @@ export class SoftBox extends SoftStructure {
       center.copy().add(new Vector(size.x / 2, -size.y / 2)),
       mass,
       fixed,
-      true
+      true,
+      friction
     );
 
     const bottomRight = new Point(
@@ -238,7 +241,8 @@ export class SoftBox extends SoftStructure {
       center.copy().add(new Vector(size.x / 2, size.y / 2)),
       mass,
       fixed,
-      true
+      true,
+      friction
     );
 
     const bottomLeft = new Point(
@@ -246,7 +250,8 @@ export class SoftBox extends SoftStructure {
       center.copy().add(new Vector(-size.x / 2, size.y / 2)),
       mass,
       fixed,
-      true
+      true,
+      friction
     );
 
     this.points.push(topLeft, topRight, bottomRight, bottomLeft);
@@ -546,5 +551,183 @@ export class Car extends SoftStructure {
       })
     }*/
     super.update(delta);
+  }
+}
+
+export class WheelAxle extends SoftStructure {
+  leftWheelPoints: Point[] = [];
+  leftWheelAnchorPoint: Point;
+  leftWheelSprings: Spring[] = [];
+  rightWheelPoints: Point[] = [];
+  rightWheelAnchorPoint: Point;
+  rightWheelSprings: Spring[] = [];
+  constructor(
+    world: World,
+    center: Vector,
+    wheelRadius: number,
+    wheelDistance: number,
+    wheelStep = 16,
+    traction = 0.2
+  ) {
+    super(world);
+
+    this.rightWheelAnchorPoint = new Point(
+      this,
+      center.copy().add(new Vector(wheelDistance / 2, 0)),
+      5,
+      false,
+      false,
+      0.3
+    );
+    this.leftWheelAnchorPoint = new Point(
+      this,
+      center.copy().add(new Vector(-wheelDistance / 2, 0)),
+      5,
+      false,
+      false,
+      0.3
+    );
+
+    this.springs.push(
+      new Spring(
+        this.leftWheelAnchorPoint,
+        this.rightWheelAnchorPoint,
+        10000,
+        null,
+        false,
+        400
+      )
+    );
+
+    //LEFT WHEEL
+    let angle = (Math.PI * 2) / wheelStep;
+    let offset = new Vector(wheelRadius, 0);
+    for (let i = 0; i < wheelStep; i++) {
+      this.leftWheelPoints.push(
+        new Point(
+          this,
+          offset.rotate(angle).copy().add(this.leftWheelAnchorPoint.position),
+          2,
+          false,
+          true,
+          traction
+        )
+      );
+      this.leftWheelSprings.push(
+        new Spring(this.leftWheelPoints[i], this.leftWheelAnchorPoint, 1000)
+      );
+      if (i > 0) {
+        this.leftWheelSprings.push(
+          new Spring(
+            this.leftWheelPoints[i],
+            this.leftWheelPoints[i - 1],
+            500,
+            null,
+            true
+          )
+        );
+      }
+      if (i > 1) {
+        this.leftWheelSprings.push(
+          new Spring(this.leftWheelPoints[i], this.leftWheelPoints[i - 2], 500)
+        );
+      }
+      if (i == wheelStep - 2) {
+        this.leftWheelSprings.push(
+          new Spring(this.leftWheelPoints[0], this.leftWheelPoints[i], 500)
+        );
+      }
+      if (i == wheelStep - 1) {
+        this.leftWheelSprings.push(
+          new Spring(
+            this.leftWheelPoints[0],
+            this.leftWheelPoints[i],
+            500,
+            null,
+            true
+          )
+        );
+        this.leftWheelSprings.push(
+          new Spring(this.leftWheelPoints[1], this.leftWheelPoints[i], 500)
+        );
+      }
+    }
+    this.points.push(...this.leftWheelPoints, this.leftWheelAnchorPoint);
+    this.springs.push(...this.leftWheelSprings);
+    this.shapes.push(
+      new Shape(this, this.leftWheelPoints, this.leftWheelSprings)
+    );
+
+    //RIGHT WHEEL
+    //let angle = Math.PI * 2 / wheelStep;
+    //let offset = new Vector(wheelRadius, 0)
+    for (let i = 0; i < wheelStep; i++) {
+      this.rightWheelPoints.push(
+        new Point(
+          this,
+          offset.rotate(angle).copy().add(this.rightWheelAnchorPoint.position),
+          2,
+          false,
+          true,
+          traction
+        )
+      );
+      this.rightWheelSprings.push(
+        new Spring(this.rightWheelPoints[i], this.rightWheelAnchorPoint, 1000)
+      );
+      if (i > 0) {
+        this.rightWheelSprings.push(
+          new Spring(
+            this.rightWheelPoints[i],
+            this.rightWheelPoints[i - 1],
+            500,
+            null,
+            true
+          )
+        );
+      }
+      if (i > 1) {
+        this.rightWheelSprings.push(
+          new Spring(this.rightWheelPoints[i], this.rightWheelPoints[i - 2], 50)
+        );
+      }
+      if (i == wheelStep - 2) {
+        this.rightWheelSprings.push(
+          new Spring(this.rightWheelPoints[0], this.rightWheelPoints[i], 500)
+        );
+      }
+      if (i == wheelStep - 1) {
+        this.rightWheelSprings.push(
+          new Spring(
+            this.rightWheelPoints[0],
+            this.rightWheelPoints[i],
+            500,
+            null,
+            true
+          )
+        );
+        this.rightWheelSprings.push(
+          new Spring(this.rightWheelPoints[1], this.rightWheelPoints[i], 500)
+        );
+      }
+    }
+    this.points.push(...this.rightWheelPoints, this.rightWheelAnchorPoint);
+    this.springs.push(...this.rightWheelSprings);
+    this.shapes.push(
+      new Shape(this, this.rightWheelPoints, this.rightWheelSprings)
+    );
+  }
+  drawOutline(ctx: CanvasRenderingContext2D) {
+    ctx.strokeStyle = "#000";
+    ctx.moveTo(
+      this.leftWheelAnchorPoint.position.x,
+      this.leftWheelAnchorPoint.position.y
+    );
+    ctx.lineTo(
+      this.rightWheelAnchorPoint.position.x,
+      this.rightWheelAnchorPoint.position.y
+    );
+    ctx.stroke();
+    super.drawOutline(ctx);
   }
 }

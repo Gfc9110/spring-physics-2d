@@ -207,6 +207,9 @@ export class BoxTool extends EditorTool {
   onMouseup(event: EditorMouseEvent) {
     let worldStart = this.editor.canvasToWorld(this.screenStart);
     let worldEnd = this.editor.canvasToWorld(event.screenPosition);
+    let size = new Vector(worldEnd.x - worldStart.x, worldEnd.y - worldStart.y);
+    if (size.x < 10) size.x = 10;
+    if (size.y < 10) size.y = 10;
     this.editor.world.structures.push(
       new SoftBox(
         this.editor.world,
@@ -214,10 +217,11 @@ export class BoxTool extends EditorTool {
           (worldStart.x + worldEnd.x) / 2,
           (worldStart.y + worldEnd.y) / 2
         ),
-        new Vector(worldEnd.x - worldStart.x, worldEnd.y - worldStart.y),
-        2000,
+        size,
+        size.x * size.y,
         false,
-        6
+        (size.x * size.y) / 2000,
+        0.5
       )
     );
     this.screenStart = null;
